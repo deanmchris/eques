@@ -1,6 +1,7 @@
 package position
 
 import (
+	"bullet/move"
 	"fmt"
 	"strconv"
 	"strings"
@@ -49,6 +50,17 @@ const (
 
 	FENStartPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
 )
+
+var Spoilers = [64]uint8{
+	0xb, 0xf, 0xf, 0xf, 0x3, 0xf, 0xf, 0x7,
+	0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
+	0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
+	0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
+	0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
+	0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
+	0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf,
+	0xe, 0xf, 0xf, 0xf, 0xc, 0xf, 0xf, 0xd,
+}
 
 type Position struct {
 	Pieces   [6]uint64
@@ -189,12 +201,82 @@ func (pos Position) String() (boardStr string) {
 	return boardStr
 }
 
+func (pos Position) DoMove(mv move.Move) Position {
+	toSq := mv.ToSq()
+	fromSq := mv.FromSq()
+
+	pieceType, pieceColor := pos.getPieceOnSq(fromSq)
+	pos.removePiece(pieceType, pieceColor, fromSq)
+
+	pos.HalfMove++
+
+	switch mv.Type() {
+	case move.QUIET: pos.putPiece(pieceType, pieceColor, toSq)
+	case move.ATTACK: pos.doAttack(pieceType, pieceColor, toSq)
+	case move.WHT_ATTACK_EP: pos.doAttack(pieceType, WHITE, toSq-8)
+	case move.BLK_ATTACK_EP: pos.doAttack(pieceType, BLACK, toSq+8)
+	case move.PROMO_Q: pos.putPiece(QUEEN, pieceColor, toSq)
+	case move.PROMO_R: pos.putPiece(ROOK, pieceColor, toSq)
+	case move.PROMO_B: pos.putPiece(BISHOP, pieceColor, toSq)
+	case move.PROMO_N: pos.putPiece(KNIGHT, pieceColor, toSq)
+	case move.PROMO_ATTK_Q: pos.doPromoAttack(QUEEN, pieceColor, toSq)
+	case move.PROMO_ATTK_R: pos.doPromoAttack(ROOK, pieceColor, toSq)
+	case move.PROMO_ATTK_B: pos.doPromoAttack(BISHOP, pieceColor, toSq)
+	case move.PROMO_ATTK_N: pos.doPromoAttack(KNIGHT, pieceColor, toSq)
+	case move.WHT_CASTLE_K: pos.doCastle(G1, H1, F1, WHITE)
+	case move.WHT_CASTLE_Q: pos.doCastle(C1, A1, D1, WHITE)
+	case move.BLK_CASTLE_K: pos.doCastle(G8, H8, F8, BLACK)
+	case move.BLK_CASTLE_Q: pos.doCastle(C8, A8, D8, BLACK)
+	}
+
+	if pieceType == PAWN {
+		pos.HalfMove = 0
+		if pieceColor == WHITE && toSq-fromSq == 16 {
+			pos.EPSq = toSq-8
+		}
+		if pieceColor == BLACK && fromSq-toSq == 16{
+			pos.EPSq = toSq+8
+		}
+	}
+	
+	pos.Castling &= Spoilers[fromSq] & Spoilers[toSq]
+	pos.Side ^= 1
+	
+	return pos
+}
+
+func (pos *Position) doPromoAttack(promoType, promoColor, toSq uint8) {
+	attackedType, attackedColor := pos.getPieceOnSq(toSq)
+	pos.removePiece(attackedType, attackedColor, toSq)
+	pos.putPiece(promoType, promoColor, toSq)
+	pos.HalfMove = 0
+}
+
+func (pos *Position) doAttack(attackerType, attackerColor, toSq uint8) {
+	attackedType, attackedColor := pos.getPieceOnSq(toSq)
+	pos.removePiece(attackedType, attackedColor, toSq)
+	pos.putPiece(attackerType, attackerColor, toSq)
+	pos.HalfMove = 0
+}
+
+func (pos *Position) doCastle(kingToSq, rookFromSq, rookToSq, color uint8) {
+	pos.removePiece(ROOK, color, rookFromSq)
+	pos.putPiece(KING, color, kingToSq)
+	pos.putPiece(ROOK, color, rookToSq)
+}
+
+
 func (pos *Position) putPiece(pieceType, pieceColor, sq uint8) {
 	pos.Pieces[pieceType] = setBit(pos.Pieces[pieceType], sq)
 	pos.Colors[pieceColor] = setBit(pos.Colors[pieceColor], sq)
 }
 
-func (pos Position) getPieceOnSq(sq uint8) (pieceType, pieceColor uint8) {
+func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
+	pos.Pieces[pieceType] = unsetBit(pos.Pieces[pieceType], sq)
+	pos.Colors[pieceColor] = unsetBit(pos.Colors[pieceColor], sq)
+}
+
+func (pos *Position) getPieceOnSq(sq uint8) (pieceType, pieceColor uint8) {
 	empty := ^(pos.Colors[WHITE] | pos.Colors[BLACK])
 
 	pawnType := ((pos.Pieces[PAWN] & SquareBB[sq]) >> sq) * PAWN
