@@ -9,17 +9,17 @@ import (
 )
 
 const (
-	PAWN    = 0
-	KNIGHT  = 1
-	BISHOP  = 2
-	ROOK    = 3
-	QUEEN   = 4
-	KING    = 5
-	NO_TYPE = 6
+	Pawn    = 0
+	Knight  = 1
+	Bishop  = 2
+	Rook    = 3
+	Queen   = 4
+	King    = 5
+	NoType = 6
 
-	WHITE    = 0
-	BLACK    = 1
-	NO_COLOR = 2
+	White    = 0
+	Black    = 1
+	NoColor = 2
 
 	WhiteKingsideRight  uint8 = 0x8
 	WhiteQueensideRight uint8 = 0x4
@@ -69,18 +69,18 @@ func (pos *Position) LoadFEN(fen string) {
 	for index, sq := 0, A8; index < len(pieces); index++ {
 		char := pieces[index]
 		switch char {
-		case 'p': pos.putPiece(PAWN, BLACK, sq); sq++
-		case 'n': pos.putPiece(KNIGHT, BLACK, sq); sq++
-		case 'b': pos.putPiece(BISHOP, BLACK, sq); sq++
-		case 'r': pos.putPiece(ROOK, BLACK, sq); sq++
-		case 'q': pos.putPiece(QUEEN, BLACK, sq); sq++
-		case 'k': pos.putPiece(KING, BLACK, sq); sq++
-		case 'P': pos.putPiece(PAWN, WHITE, sq); sq++
-		case 'N': pos.putPiece(KNIGHT, WHITE, sq); sq++
-		case 'B': pos.putPiece(BISHOP, WHITE, sq); sq++
-		case 'R': pos.putPiece(ROOK, WHITE, sq); sq++
-		case 'Q': pos.putPiece(QUEEN, WHITE, sq); sq++
-		case 'K': pos.putPiece(KING, WHITE, sq); sq++
+		case 'p': pos.putPiece(Pawn, Black, sq); sq++
+		case 'n': pos.putPiece(Knight, Black, sq); sq++
+		case 'b': pos.putPiece(Bishop, Black, sq); sq++
+		case 'r': pos.putPiece(Rook, Black, sq); sq++
+		case 'q': pos.putPiece(Queen, Black, sq); sq++
+		case 'k': pos.putPiece(King, Black, sq); sq++
+		case 'P': pos.putPiece(Pawn, White, sq); sq++
+		case 'N': pos.putPiece(Knight, White, sq); sq++
+		case 'B': pos.putPiece(Bishop, White, sq); sq++
+		case 'R': pos.putPiece(Rook, White, sq); sq++
+		case 'Q': pos.putPiece(Queen, White, sq); sq++
+		case 'K': pos.putPiece(King, White, sq); sq++
 		case '/':
 			sq -= 16
 		case '1', '2', '3', '4', '5', '6', '7', '8':
@@ -88,9 +88,9 @@ func (pos *Position) LoadFEN(fen string) {
 		}
 	}
 
-	pos.Side = WHITE
+	pos.Side = White
 	if side == "b" {
-		pos.Side = BLACK
+		pos.Side = Black
 	}
 
 	pos.EPSq = NoSq
@@ -125,16 +125,16 @@ func (pos Position) String() (boardStr string) {
 			var pieceChar rune
 
 			switch pieceType {
-			case PAWN: pieceChar = 'p'
-			case KNIGHT: pieceChar = 'n'
-			case BISHOP: pieceChar = 'b'
-			case ROOK: pieceChar = 'r'
-			case QUEEN: pieceChar = 'q'
-			case KING: pieceChar = 'k'
-			case NO_TYPE: pieceChar = '.'
+			case Pawn: pieceChar = 'p'
+			case Knight: pieceChar = 'n'
+			case Bishop: pieceChar = 'b'
+			case Rook: pieceChar = 'r'
+			case Queen: pieceChar = 'q'
+			case King: pieceChar = 'k'
+			case NoType: pieceChar = '.'
 			}
 
-			if pieceColor == WHITE {
+			if pieceColor == White {
 				pieceChar = unicode.ToUpper(pieceChar)
 			}
 
@@ -147,7 +147,7 @@ func (pos Position) String() (boardStr string) {
 	boardStr += "\n    a b c d e f g h"
 
 	boardStr += "\n\n"
-	if pos.Side == WHITE {
+	if pos.Side == White {
 		boardStr += "turn: white\n"
 	} else {
 		boardStr += "turn: black\n"
@@ -188,30 +188,30 @@ func (pos Position) DoMove(mv move.Move) Position {
 	pos.HalfMove++
 
 	switch mv.Type() {
-	case move.QUIET: pos.putPiece(pieceType, pieceColor, toSq)
-	case move.ATTACK: pos.doAttack(pieceType, pieceColor, toSq)
-	case move.WHT_ATTACK_EP: pos.doAttack(pieceType, WHITE, toSq-8)
-	case move.BLK_ATTACK_EP: pos.doAttack(pieceType, BLACK, toSq+8)
-	case move.PROMO_Q: pos.putPiece(QUEEN, pieceColor, toSq)
-	case move.PROMO_R: pos.putPiece(ROOK, pieceColor, toSq)
-	case move.PROMO_B: pos.putPiece(BISHOP, pieceColor, toSq)
-	case move.PROMO_N: pos.putPiece(KNIGHT, pieceColor, toSq)
-	case move.PROMO_ATTK_Q: pos.doPromoAttack(QUEEN, pieceColor, toSq)
-	case move.PROMO_ATTK_R: pos.doPromoAttack(ROOK, pieceColor, toSq)
-	case move.PROMO_ATTK_B: pos.doPromoAttack(BISHOP, pieceColor, toSq)
-	case move.PROMO_ATTK_N: pos.doPromoAttack(KNIGHT, pieceColor, toSq)
-	case move.WHT_CASTLE_K: pos.doCastle(G1, H1, F1, WHITE)
-	case move.WHT_CASTLE_Q: pos.doCastle(C1, A1, D1, WHITE)
-	case move.BLK_CASTLE_K: pos.doCastle(G8, H8, F8, BLACK)
-	case move.BLK_CASTLE_Q: pos.doCastle(C8, A8, D8, BLACK)
+	case move.Quiet: pos.putPiece(pieceType, pieceColor, toSq)
+	case move.Attack: pos.doAttack(pieceType, pieceColor, toSq)
+	case move.WhiteAttackEP: pos.doAttack(pieceType, White, toSq-8)
+	case move.BlackAttackEP: pos.doAttack(pieceType, Black, toSq+8)
+	case move.PromoQ: pos.putPiece(Queen, pieceColor, toSq)
+	case move.PromoR: pos.putPiece(Rook, pieceColor, toSq)
+	case move.PromoB: pos.putPiece(Bishop, pieceColor, toSq)
+	case move.PromoN: pos.putPiece(Knight, pieceColor, toSq)
+	case move.PromoAttkQ: pos.doPromoAttack(Queen, pieceColor, toSq)
+	case move.PromoAttkR: pos.doPromoAttack(Rook, pieceColor, toSq)
+	case move.PromoAttkB: pos.doPromoAttack(Bishop, pieceColor, toSq)
+	case move.PromoAttkN: pos.doPromoAttack(Knight, pieceColor, toSq)
+	case move.WhiteCastleK: pos.doCastle(G1, H1, F1, White)
+	case move.WhiteCastleQ: pos.doCastle(C1, A1, D1, White)
+	case move.BlackCastleK: pos.doCastle(G8, H8, F8, Black)
+	case move.BlackCastleQ: pos.doCastle(C8, A8, D8, Black)
 	}
 
-	if pieceType == PAWN {
+	if pieceType == Pawn {
 		pos.HalfMove = 0
-		if pieceColor == WHITE && toSq-fromSq == 16 {
+		if pieceColor == White && toSq-fromSq == 16 {
 			pos.EPSq = toSq-8
 		}
-		if pieceColor == BLACK && fromSq-toSq == 16{
+		if pieceColor == Black && fromSq-toSq == 16{
 			pos.EPSq = toSq+8
 		}
 	}
@@ -237,9 +237,9 @@ func (pos *Position) doAttack(attackerType, attackerColor, toSq uint8) {
 }
 
 func (pos *Position) doCastle(kingToSq, rookFromSq, rookToSq, color uint8) {
-	pos.removePiece(ROOK, color, rookFromSq)
-	pos.putPiece(KING, color, kingToSq)
-	pos.putPiece(ROOK, color, rookToSq)
+	pos.removePiece(Rook, color, rookFromSq)
+	pos.putPiece(King, color, kingToSq)
+	pos.putPiece(Rook, color, rookToSq)
 }
 
 
@@ -254,19 +254,19 @@ func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
 }
 
 func (pos *Position) getPieceOnSq(sq uint8) (pieceType, pieceColor uint8) {
-	empty := ^(pos.Colors[WHITE] | pos.Colors[BLACK])
+	empty := ^(pos.Colors[White] | pos.Colors[Black])
 
-	pawnType := ((pos.Pieces[PAWN] & SquareBB[sq]) >> sq) * PAWN
-	knightType := ((pos.Pieces[KNIGHT] & SquareBB[sq]) >> sq) * KNIGHT
-	bishopType := ((pos.Pieces[BISHOP] & SquareBB[sq]) >> sq) * BISHOP
-	rookType := ((pos.Pieces[ROOK] & SquareBB[sq]) >> sq) * ROOK
-	queenType := ((pos.Pieces[QUEEN] & SquareBB[sq]) >> sq) * QUEEN
-	kingType := ((pos.Pieces[KING] & SquareBB[sq]) >> sq) * KING
-	noType := ((empty & SquareBB[sq]) >> sq) * NO_TYPE
+	pawnType := ((pos.Pieces[Pawn] & SquareBB[sq]) >> sq) * Pawn
+	knightType := ((pos.Pieces[Knight] & SquareBB[sq]) >> sq) * Knight
+	bishopType := ((pos.Pieces[Bishop] & SquareBB[sq]) >> sq) * Bishop
+	rookType := ((pos.Pieces[Rook] & SquareBB[sq]) >> sq) * Rook
+	queenType := ((pos.Pieces[Queen] & SquareBB[sq]) >> sq) * Queen
+	kingType := ((pos.Pieces[King] & SquareBB[sq]) >> sq) * King
+	noType := ((empty & SquareBB[sq]) >> sq) * NoType
 
-	whiteColor := ((pos.Colors[WHITE] & SquareBB[sq]) >> sq) * WHITE
-	blackColor := ((pos.Colors[BLACK] & SquareBB[sq]) >> sq) * BLACK
-	noColor := ((empty & SquareBB[sq]) >> sq) * NO_COLOR
+	whiteColor := ((pos.Colors[White] & SquareBB[sq]) >> sq) * White
+	blackColor := ((pos.Colors[Black] & SquareBB[sq]) >> sq) * Black
+	noColor := ((empty & SquareBB[sq]) >> sq) * NoColor
 
 	return uint8(pawnType + knightType + bishopType + rookType + queenType + kingType + noType),
 		uint8(whiteColor + blackColor + noColor)
