@@ -267,13 +267,13 @@ func (pos *Position) doCastle(kingToSq, rookFromSq, rookToSq, color uint8) {
 
 
 func (pos *Position) putPiece(pieceType, pieceColor, sq uint8) {
-	pos.Pieces[pieceType] = setBit(pos.Pieces[pieceType], sq)
-	pos.Colors[pieceColor] = setBit(pos.Colors[pieceColor], sq)
+	pos.Pieces[pieceType] = SetBit(pos.Pieces[pieceType], sq)
+	pos.Colors[pieceColor] = SetBit(pos.Colors[pieceColor], sq)
 }
 
 func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
-	pos.Pieces[pieceType] = unsetBit(pos.Pieces[pieceType], sq)
-	pos.Colors[pieceColor] = unsetBit(pos.Colors[pieceColor], sq)
+	pos.Pieces[pieceType] = UnsetBit(pos.Pieces[pieceType], sq)
+	pos.Colors[pieceColor] = UnsetBit(pos.Colors[pieceColor], sq)
 }
 
 func (pos *Position) getPieceOnSq(sq uint8) (pieceType, pieceColor uint8) {

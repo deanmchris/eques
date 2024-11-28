@@ -5,21 +5,26 @@ import (
 	"math/bits"
 )
 
+const (
+	FullBB uint64 = 0xffffffffffffffff
+	EmptyBB uint64 = 0x0
+)
+
 var SquareBB [64]uint64
 
-func setBit(bb uint64, sq uint8) uint64 {
+func SetBit(bb uint64, sq uint8) uint64 {
 	return bb | SquareBB[sq]
 }
 
-func unsetBit(bb uint64, sq uint8) uint64 {
+func UnsetBit(bb uint64, sq uint8) uint64 {
 	return bb ^ SquareBB[sq]
 }
 
-func isBitset(bb uint64, sq uint8) bool {
+func IsBitset(bb uint64, sq uint8) bool {
 	return bb&SquareBB[sq] != 0
 }
 
-func getLSBpos(bb uint64) uint8 {
+func GetLSBpos(bb uint64) uint8 {
 	return uint8(bits.TrailingZeros64(bb))
 }
 
