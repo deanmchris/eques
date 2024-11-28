@@ -8,28 +8,6 @@ import (
 	"unicode"
 )
 
-/*
-What functionality does a position object need?
-	* Load FEN strings
-	* Make moves (unmake moves?)
-	* Output FEN strings
-	* Print position
-	* Given a square can you tell me what piece type and color
-	  is sitting there? Can this be done only using bitboards,
-	  avoiding using a mailbox representation of the board too? [x]
-
-What needs to be tracked?
-	* What pieces are sitting where? Will be done using bitboards,
-	  2 for color, 6 for piece type
-	* Active color
-	* Castling rights
-	* En passant square
-	* Half-move clock
-	* Full-move clock
-	* Zobrist hash (eventually, can hasing be done in a a different way if
-	  copy/make paradigm is used?)
-*/
-
 const (
 	PAWN    = 0
 	KNIGHT  = 1
@@ -89,7 +67,6 @@ func (pos *Position) LoadFEN(fen string) {
 	halfMove := fields[4]
 
 	for index, sq := 0, A8; index < len(pieces); index++ {
-		// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
 		char := pieces[index]
 		switch char {
 		case 'p': pos.putPiece(PAWN, BLACK, sq); sq++
