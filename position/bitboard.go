@@ -10,7 +10,7 @@ const (
 	EmptyBB uint64 = 0x0
 )
 
-var SquareBB [64]uint64
+var SquareBB [65]uint64
 
 func SetBit(bb uint64, sq uint8) uint64 {
 	return bb | SquareBB[sq]
