@@ -45,7 +45,7 @@ func PrintBB(bb uint64) {
 	fmt.Println("    ---------------\n    a b c d e f g h")
 }
 
-func init() {
+func InitBitboards() {
 	for i := 0; i < 64; i++ {
 		// Bijective map chosen: A1 <-> LSB, B1 <-> LSB+1, . . ., G8 <-> MSB-1, H8 <-> MSB
 		SquareBB[i] = 1 << i
