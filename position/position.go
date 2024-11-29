@@ -95,7 +95,7 @@ func (pos *Position) LoadFEN(fen string) {
 
 	pos.EPSq = NoSq
 	if ep != "-" {
-		pos.EPSq = coordToSq(ep)
+		pos.EPSq = CoordToSq(ep)
 	}
 
 	halfMoveCounter, _ := strconv.Atoi(halfMove)
@@ -171,7 +171,7 @@ func (pos Position) String() (boardStr string) {
 	if pos.EPSq == NoSq {
 		boardStr += "none"
 	} else {
-		boardStr += sqToCoord(pos.EPSq)
+		boardStr += SqToCoord(pos.EPSq)
 	}
 
 	boardStr += fmt.Sprintf("\nhalf-move clock: %d\n", pos.HalfMove)
