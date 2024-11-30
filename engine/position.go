@@ -254,23 +254,6 @@ func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
 }
 
 func (pos *Position) getPieceOnSq(sq uint8) (uint8, uint8) {
-	/*emptyBB := ^(pos.Colors[White] | pos.Colors[Black])
-
-	pawnType := ((pos.Pieces[Pawn] & SquareBB[sq]) >> sq) * Pawn
-	knightType := ((pos.Pieces[Knight] & SquareBB[sq]) >> sq) * Knight
-	bishopType := ((pos.Pieces[Bishop] & SquareBB[sq]) >> sq) * Bishop
-	rookType := ((pos.Pieces[Rook] & SquareBB[sq]) >> sq) * Rook
-	queenType := ((pos.Pieces[Queen] & SquareBB[sq]) >> sq) * Queen
-	kingType := ((pos.Pieces[King] & SquareBB[sq]) >> sq) * King
-	noType := ((emptyBB & SquareBB[sq]) >> sq) * NoType
-
-	whiteColor := ((pos.Colors[White] & SquareBB[sq]) >> sq) * White
-	blackColor := ((pos.Colors[Black] & SquareBB[sq]) >> sq) * Black
-	noColor := ((emptyBB & SquareBB[sq]) >> sq) * NoColor
-
-	return uint8(pawnType + knightType + bishopType + rookType + queenType + kingType + noType),
-		uint8(whiteColor + blackColor + noColor)*/
-
 	pieceType := NoType
 	sqBB := SquareBB[sq]
 	if pos.Pieces[Pawn] & sqBB != 0 {
