@@ -1,13 +1,12 @@
 package main
 
 import (
-	"bullet/movegen"
-	"bullet/position"
+	"bullet/engine"
 )
 
 func init() {
-	position.InitBitboards()
-	movegen.InitTables()
+	engine.InitBitboards()
+	engine.InitTables()
 }
 
 func main() {
