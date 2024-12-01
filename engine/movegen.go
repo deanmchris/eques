@@ -51,13 +51,13 @@ func genWhitePawnMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move
 			moves = makePromotionMoves(from, to, DeltaToGenerateQuietPromotions, moves)
 			continue
 		}
-		moves = append(moves, NewMove(from, to, Quiet))
+		moves = append(moves, NewMove(from, to, Pawn, Quiet))
 	}
 
 	for pawnDoublePushMoves != 0 {
 		to := GetLSBpos(pawnDoublePushMoves)
 		from := to - South - South
-		moves = append(moves, NewMove(from, to, Quiet))
+		moves = append(moves, NewMove(from, to, Pawn, Quiet))
 		pawnDoublePushMoves &= (pawnDoublePushMoves - 1)
 	}
 
@@ -70,13 +70,13 @@ func genWhitePawnMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move
 		from := to - South - West
 
 		if to == pos.EPSq {
-			moves = append(moves, NewMove(from, to, WhiteAttackEP))
+			moves = append(moves, NewMove(from, to, Pawn, WhiteAttackEP))
 		} else {
 			if to >= A8 {
 				moves = makePromotionMoves(from, to, DeltaToGenerateAttackPromotions, moves)
 				continue
 			}
-			moves = append(moves, NewMove(from, to, Attack))
+			moves = append(moves, NewMove(from, to, Pawn, Attack))
 		}
 	}
 
@@ -86,13 +86,13 @@ func genWhitePawnMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move
 		from := to - South + East
 
 		if to == pos.EPSq {
-			moves = append(moves, NewMove(from, to, WhiteAttackEP))
+			moves = append(moves, NewMove(from, to, Pawn, WhiteAttackEP))
 		} else {
 			if to >= A8 {
 				moves = makePromotionMoves(from, to, DeltaToGenerateAttackPromotions, moves)
 				continue
 			}
-			moves = append(moves, NewMove(from, to, Attack))
+			moves = append(moves, NewMove(from, to, Pawn, Attack))
 		}
 	}
 
@@ -115,13 +115,13 @@ func genBlackPawnMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move
 			moves = makePromotionMoves(from, to, DeltaToGenerateQuietPromotions, moves)
 			continue
 		}
-		moves = append(moves, NewMove(from, to, Quiet))
+		moves = append(moves, NewMove(from, to, Pawn, Quiet))
 	}
 
 	for pawnDoublePushMoves != 0 {
 		to := GetLSBpos(pawnDoublePushMoves)
 		from := to + North + North
-		moves = append(moves, NewMove(from, to, Quiet))
+		moves = append(moves, NewMove(from, to, Pawn, Quiet))
 		pawnDoublePushMoves &= (pawnDoublePushMoves - 1)
 	}
 
@@ -134,13 +134,13 @@ func genBlackPawnMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move
 		from := to + North - West
 
 		if to == pos.EPSq {
-			moves = append(moves, NewMove(from, to, BlackAttackEP))
+			moves = append(moves, NewMove(from, to, Pawn, BlackAttackEP))
 		} else {
 			if to <= H1 {
 				moves = makePromotionMoves(from, to, DeltaToGenerateAttackPromotions, moves)
 				continue
 			}
-			moves = append(moves, NewMove(from, to, Attack))
+			moves = append(moves, NewMove(from, to, Pawn, Attack))
 		}
 	}
 
@@ -150,13 +150,13 @@ func genBlackPawnMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move
 		from := to + North + East
 
 		if to == pos.EPSq {
-			moves = append(moves, NewMove(from, to, BlackAttackEP))
+			moves = append(moves, NewMove(from, to, Pawn, BlackAttackEP))
 		} else {
 			if to <= H1 {
 				moves = makePromotionMoves(from, to, DeltaToGenerateAttackPromotions, moves)
 				continue
 			}
-			moves = append(moves, NewMove(from, to, Attack))
+			moves = append(moves, NewMove(from, to, Pawn, Attack))
 		}
 	}
 
@@ -168,7 +168,7 @@ func genKnightMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move {
 	for knightsBB != 0 {
 		sq := GetLSBpos(knightsBB)
 		knightMoves := (KnightMoves[sq] & ^usBB)
-		moves = genMovesFromBB(sq, knightMoves, enemyBB, moves)
+		moves = genMovesFromBB(sq, Knight, knightMoves, enemyBB, moves)
 		knightsBB &= (knightsBB - 1)
 	}
 	return moves
@@ -181,7 +181,7 @@ func genBishopMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move {
 	for bishopsBB != 0 {
 		sq := GetLSBpos(bishopsBB)
 		bishopMoves := LookupBishopMoves(sq, occuipiedBB) & ^usBB
-		moves = genMovesFromBB(sq, bishopMoves, enemyBB, moves)
+		moves = genMovesFromBB(sq, Bishop, bishopMoves, enemyBB, moves)
 		bishopsBB &= (bishopsBB - 1)
 	}
 
@@ -195,7 +195,7 @@ func genRookMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move {
 	for rooksBB != 0 {
 		sq := GetLSBpos(rooksBB)
 		rookMoves := LookupRookMoves(sq, occuipiedBB) & ^usBB
-		moves = genMovesFromBB(sq, rookMoves, enemyBB, moves)
+		moves = genMovesFromBB(sq, Rook, rookMoves, enemyBB, moves)
 		rooksBB &= (rooksBB - 1)
 	}
 
@@ -213,7 +213,7 @@ func genQueenMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []Move {
 		rookMoves := LookupRookMoves(sq, occuipiedBB)
 		queenMoves := (bishopMoves | rookMoves) & ^usBB
 
-		moves = genMovesFromBB(sq, queenMoves, enemyBB, moves)
+		moves = genMovesFromBB(sq, Queen, queenMoves, enemyBB, moves)
 		queensBB &= (queensBB - 1)
 	}
 
@@ -224,7 +224,7 @@ func genNonCastlingKingMoves(pos *Position, moves []Move, usBB, enemyBB uint64) 
 	kingBB := pos.Pieces[King] & usBB
 	sq := GetLSBpos(kingBB)
 	kingMoves := KingMoves[sq] & ^usBB
-	moves = genMovesFromBB(sq, kingMoves, enemyBB, moves)
+	moves = genMovesFromBB(sq, King, kingMoves, enemyBB, moves)
 	return moves
 }
 
@@ -247,7 +247,7 @@ func genWhiteCastlingMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []
 		goto genQueensideCastlingMove
 	}
 
-	moves = append(moves, NewMove(E1, G1, WhiteCastleK))
+	moves = append(moves, NewMove(E1, G1, King, WhiteCastleK))
 
 genQueensideCastlingMove:
 
@@ -267,7 +267,7 @@ genQueensideCastlingMove:
 		goto Done
 	}
 
-	moves = append(moves, NewMove(E1, C1, WhiteCastleQ))
+	moves = append(moves, NewMove(E1, C1, King, WhiteCastleQ))
 
 Done:
 	return moves
@@ -292,7 +292,7 @@ func genBlackCastlingMoves(pos *Position, moves []Move, usBB, enemyBB uint64) []
 		goto genQueensideCastlingMove
 	}
 
-	moves = append(moves, NewMove(E8, G8, BlackCastleK))
+	moves = append(moves, NewMove(E8, G8, King, BlackCastleK))
 
 genQueensideCastlingMove:
 
@@ -312,13 +312,13 @@ genQueensideCastlingMove:
 		goto Done
 	}
 
-	moves = append(moves, NewMove(E8, C8, BlackCastleQ))
+	moves = append(moves, NewMove(E8, C8, King, BlackCastleQ))
 
 Done:
 	return moves
 }
 
-func genMovesFromBB(from uint8, movesBB, enemyBB uint64, moves []Move) []Move {
+func genMovesFromBB(from, fromType uint8, movesBB, enemyBB uint64, moves []Move) []Move {
 	for movesBB != 0 {
 		to := GetLSBpos(movesBB)
 		toBB := uint64(1) << to
@@ -328,17 +328,17 @@ func genMovesFromBB(from uint8, movesBB, enemyBB uint64, moves []Move) []Move {
 			moveType = Attack
 		}
 
-		moves = append(moves, NewMove(from, to, moveType))
+		moves = append(moves, NewMove(from, to, fromType, moveType))
 		movesBB &= (movesBB - 1)
 	}
 	return moves
 }
 
 func makePromotionMoves(from, to uint8, deltaToGenQuietOrAttackPromos uint8, moves []Move) []Move {
-	moves = append(moves, NewMove(from, to, deltaToGenQuietOrAttackPromos+PromoQ))
-	moves = append(moves, NewMove(from, to, deltaToGenQuietOrAttackPromos+PromoR))
-	moves = append(moves, NewMove(from, to, deltaToGenQuietOrAttackPromos+PromoB))
-	moves = append(moves, NewMove(from, to, deltaToGenQuietOrAttackPromos+PromoN))
+	moves = append(moves, NewMove(from, to, Pawn, deltaToGenQuietOrAttackPromos+PromoQ))
+	moves = append(moves, NewMove(from, to, Pawn, deltaToGenQuietOrAttackPromos+PromoR))
+	moves = append(moves, NewMove(from, to, Pawn, deltaToGenQuietOrAttackPromos+PromoB))
+	moves = append(moves, NewMove(from, to, Pawn, deltaToGenQuietOrAttackPromos+PromoN))
 	return moves
 }
 

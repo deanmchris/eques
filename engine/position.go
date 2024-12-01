@@ -218,8 +218,8 @@ func (pos *Position) SqIsAttacked(usColor, sq uint8) bool {
 func (pos Position) DoMove(move Move) *Position {
 	toSq := move.ToSq()
 	fromSq := move.FromSq()
+	pieceType := move.FromType()
 
-	pieceType := pos.getPieceTypeOnSq(fromSq)
 	pos.removePiece(pieceType, pos.Side, fromSq)
 
 	pos.HalfMove++
