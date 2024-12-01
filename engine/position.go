@@ -229,21 +229,21 @@ func (pos Position) DoMove(move Move) *Position {
 
 	switch move.Type() {
 	case Quiet: pos.putPiece(pieceType, pos.Side, toSq)
-	case Attack: pos.doAttack(pieceType, pos.Side, toSq, toSq)
-	case WhiteAttackEP: pos.doAttack(pieceType, White, toSq, toSq-8)
-	case BlackAttackEP: pos.doAttack(pieceType, Black, toSq, toSq+8)
+	case Attack: pos.doAttack(pieceType, toSq)
+	case WhiteAttackEP: pos.doEPAttack(toSq, toSq-8)
+	case BlackAttackEP: pos.doEPAttack(toSq, toSq+8)
 	case PromoQ: pos.putPiece(Queen, pos.Side, toSq)
 	case PromoR: pos.putPiece(Rook, pos.Side, toSq)
 	case PromoB: pos.putPiece(Bishop, pos.Side, toSq)
 	case PromoN: pos.putPiece(Knight, pos.Side, toSq)
-	case PromoAttkQ: pos.doPromoAttack(Queen, pos.Side, toSq)
-	case PromoAttkR: pos.doPromoAttack(Rook, pos.Side, toSq)
-	case PromoAttkB: pos.doPromoAttack(Bishop, pos.Side, toSq)
-	case PromoAttkN: pos.doPromoAttack(Knight, pos.Side, toSq)
-	case WhiteCastleK: pos.doCastle(G1, H1, F1, White)
-	case WhiteCastleQ: pos.doCastle(C1, A1, D1, White)
-	case BlackCastleK: pos.doCastle(G8, H8, F8, Black)
-	case BlackCastleQ: pos.doCastle(C8, A8, D8, Black)
+	case PromoAttkQ: pos.doAttack(Queen, toSq)
+	case PromoAttkR: pos.doAttack(Rook, toSq)
+	case PromoAttkB: pos.doAttack(Bishop, toSq)
+	case PromoAttkN: pos.doAttack(Knight, toSq)
+	case WhiteCastleK: pos.doCastle(G1, H1, F1)
+	case WhiteCastleQ: pos.doCastle(C1, A1, D1)
+	case BlackCastleK: pos.doCastle(G8, H8, F8)
+	case BlackCastleQ: pos.doCastle(C8, A8, D8)
 	}
 
 	if pieceType == Pawn {
@@ -261,24 +261,23 @@ func (pos Position) DoMove(move Move) *Position {
 	return &pos
 }
 
-func (pos *Position) doPromoAttack(promoType, promoColor, toSq uint8) {
+func (pos *Position) doEPAttack(toSq, capturedPawnSq uint8) {
+	pos.removePiece(Pawn, pos.Side^1, capturedPawnSq)
+	pos.putPiece(Pawn, pos.Side, toSq)
+	pos.HalfMove = 0
+}
+
+func (pos *Position) doAttack(typeOnToSq, toSq uint8) {
 	attackedType := pos.getPieceTypeOnSq(toSq)
 	pos.removePiece(attackedType, pos.Side^1, toSq)
-	pos.putPiece(promoType, promoColor, toSq)
+	pos.putPiece(typeOnToSq, pos.Side, toSq)
 	pos.HalfMove = 0
 }
 
-func (pos *Position) doAttack(attackerType, attackerColor, attackerToSq, attackedSq uint8) {
-	attackedType := pos.getPieceTypeOnSq(attackedSq)
-	pos.removePiece(attackedType, pos.Side^1, attackedSq)
-	pos.putPiece(attackerType, attackerColor, attackerToSq)
-	pos.HalfMove = 0
-}
-
-func (pos *Position) doCastle(kingToSq, rookFromSq, rookToSq, color uint8) {
-	pos.removePiece(Rook, color, rookFromSq)
-	pos.putPiece(King, color, kingToSq)
-	pos.putPiece(Rook, color, rookToSq)
+func (pos *Position) doCastle(kingToSq, rookFromSq, rookToSq uint8) {
+	pos.removePiece(Rook, pos.Side, rookFromSq)
+	pos.putPiece(King, pos.Side, kingToSq)
+	pos.putPiece(Rook, pos.Side, rookToSq)
 }
 
 
