@@ -186,12 +186,23 @@ func (pos *Position) SqIsAttacked(usColor, sq uint8) bool {
 	enemyBB := pos.Colors[usColor^1]
 	usBB := pos.Colors[usColor]
 
-	enemyBishops := pos.Pieces[Bishop] & enemyBB
-	enemyRooks := pos.Pieces[Rook] & enemyBB
-	enemyQueens := pos.Pieces[Queen] & enemyBB
 	enemyKnights := pos.Pieces[Knight] & enemyBB
 	enemyKing := pos.Pieces[King] & enemyBB
 	enemyPawns := pos.Pieces[Pawn] & enemyBB
+	
+	if KnightMoves[sq]&enemyKnights != 0 {
+		return true
+	}
+	if KingMoves[sq]&enemyKing != 0 {
+		return true
+	}
+	if PawnAttacks[usColor][sq]&enemyPawns != 0 {
+		return true
+	}
+
+	enemyBishops := pos.Pieces[Bishop] & enemyBB
+	enemyRooks := pos.Pieces[Rook] & enemyBB
+	enemyQueens := pos.Pieces[Queen] & enemyBB
 
 	intercardinalRays := LookupBishopMoves(sq, enemyBB|usBB)
 	cardinalRaysRays := LookupRookMoves(sq, enemyBB|usBB)
@@ -202,16 +213,7 @@ func (pos *Position) SqIsAttacked(usColor, sq uint8) bool {
 	if cardinalRaysRays&(enemyRooks|enemyQueens) != 0 {
 		return true
 	}
-
-	if KnightMoves[sq]&enemyKnights != 0 {
-		return true
-	}
-	if KingMoves[sq]&enemyKing != 0 {
-		return true
-	}
-	if PawnAttacks[usColor][sq]&enemyPawns != 0 {
-		return true
-	}
+	
 	return false
 }
 
@@ -248,8 +250,7 @@ func (pos Position) DoMove(move Move) *Position {
 		pos.HalfMove = 0
 		if pos.Side == White && toSq-fromSq == 16 {
 			pos.EPSq = toSq-8
-		}
-		if pos.Side == Black && fromSq-toSq == 16 {
+		} else if pos.Side == Black && fromSq-toSq == 16 {
 			pos.EPSq = toSq+8
 		}
 	}

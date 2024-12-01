@@ -351,14 +351,14 @@ func genBishopMovesHQ(sq uint8, occupiedBB uint64, genBlockerMask bool) uint64 {
 }
 
 func LookupRookMoves(sq uint8, blockers uint64) uint64 {
-	magic := RookMagics[sq]
+	magic := &RookMagics[sq]
 	blockers &= magic.BlockerMask
 	hash := (blockers * magic.MagicNo) >> magic.Shift
 	return RookMovesHashTable[sq][hash]
 }
 
 func LookupBishopMoves(sq uint8, blockers uint64) uint64 {
-	magic := BishopMagics[sq]
+	magic := &BishopMagics[sq]
 	blockers &= magic.BlockerMask
 	hash := (blockers * magic.MagicNo) >> magic.Shift
 	return BishopMovesHashTable[sq][hash]
