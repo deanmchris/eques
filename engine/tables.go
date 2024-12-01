@@ -65,7 +65,6 @@ var MaskAntidiagonal = [64]uint64{}
 var KingMoves = [64]uint64{}
 var KnightMoves = [64]uint64{}
 var PawnAttacks = [2][64]uint64{}
-var PawnPushes = [2][64]uint64{}
 
 
 func InitTables() {
@@ -82,8 +81,6 @@ func InitTables() {
 
 		KingMoves[sq] = genKingMovesFromSq(sq)
 		KnightMoves[sq] = genKnightMovesFromSq(sq)
-		PawnPushes[White][sq] = genPawnPushMoveFromSq(sq, White)
-		PawnPushes[Black][sq] = genPawnPushMoveFromSq(sq, Black)
 		PawnAttacks[White][sq] = genPawnAttackMovesFromSq(sq, White)
 		PawnAttacks[Black][sq] = genPawnAttackMovesFromSq(sq, Black)
 
@@ -126,7 +123,7 @@ func genDiagonalRayGoingThruSq(sq uint8) uint64 {
 	sqBBMaskFileHRank8 := MaskFile[FileH] | MaskRank[Rank8]
 	sqBBMaskFileARank1 := MaskFile[FileA] | MaskRank[Rank1]
 
-	sqBB := SquareBB[sq]
+	sqBB := uint64(1) << sq
 	diagonalMask := sqBB
 		
 	for i := uint8(1); (diagonalMask & sqBBMaskFileHRank8) == 0; i++ {
@@ -143,7 +140,7 @@ func genAntidiagonalRayGoingThruSq(sq uint8) uint64 {
 	sqBBMaskFileARank8 := MaskFile[FileA] | MaskRank[Rank8]
 	sqBBMaskFileHRank1 := MaskFile[FileH] | MaskRank[Rank1]
 
-	sqBB := SquareBB[sq]
+	sqBB := uint64(1) << sq
 	antidiagonalMask := sqBB
 
 	for i := uint8(1); (antidiagonalMask & sqBBMaskFileARank8) == 0; i++ {
@@ -158,7 +155,7 @@ func genAntidiagonalRayGoingThruSq(sq uint8) uint64 {
 }
 
 func genKingMovesFromSq(sq uint8) uint64 {
-	sqBB := SquareBB[sq]
+	sqBB := uint64(1) << sq
 	sqBBClippedHFile := sqBB & ClearFile[FileH]
 	sqBBClippedAFile := sqBB & ClearFile[FileA]
 
@@ -177,7 +174,7 @@ func genKingMovesFromSq(sq uint8) uint64 {
 }
 
 func genKnightMovesFromSq(sq uint8) uint64 {
-	sqBB := SquareBB[sq]
+	sqBB := uint64(1) << sq
 	sqBBClippedHFile := sqBB & ClearFile[FileH]
 	sqBBClippedAFile := sqBB & ClearFile[FileA]
 	sqBBClippedHGFile := sqBB & ClearFile[FileH] & ClearFile[FileG]
@@ -199,16 +196,8 @@ func genKnightMovesFromSq(sq uint8) uint64 {
 		southSouthWest | southWestWest | northNorthWest | northWestWest
 }
 
-func genPawnPushMoveFromSq(sq, color uint8) uint64 {
-	sqBB := SquareBB[sq]
-	if color == White {
-		return sqBB << North
-	}
-	return sqBB >> South
-}
-
 func genPawnAttackMovesFromSq(sq, color uint8) uint64 {
-	sqBB := SquareBB[sq]
+	sqBB := uint64(1) << sq
 	sqBBClippedHFile := sqBB & ClearFile[FileH]
 	sqBBClippedAFile := sqBB & ClearFile[FileA]
 
@@ -319,7 +308,7 @@ func genBishopMagicForSq(sq uint8, prng *prng.PseduoRandomGenerator) {
 
 
 func genRookMovesHQ(sq uint8, occupiedBB uint64, genBlockerMask bool) uint64 {
-	sliderBB := SquareBB[sq]
+	sliderBB := uint64(1) << sq
 
 	fileMask := MaskFile[FileOf(sq)]
 	rankMask := MaskRank[RankOf(sq)]
@@ -341,7 +330,7 @@ func genRookMovesHQ(sq uint8, occupiedBB uint64, genBlockerMask bool) uint64 {
 }
 
 func genBishopMovesHQ(sq uint8, occupiedBB uint64, genBlockerMask bool) uint64 {
-	sliderBB := SquareBB[sq]
+	sliderBB := uint64(1) << sq
 
 	diagonalMask := MaskDiagonal[sq]
 	antidiagonalMask := MaskAntidiagonal[sq]

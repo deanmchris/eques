@@ -29,6 +29,13 @@ const (
 	FlippedMoveScoreBitmask = 0xffff
 )
 
+// A move is encoded as a 32 bit integer with the following structure (starting with LSB):
+// 6-bits: from square
+// 6-bits: to square
+// 4-bits: piece type & piece color on from square
+// 4-bits: piece type & piece color on to square
+// 4-bits: moveType
+// 8-bits: move score
 type Move uint32
 
 func NewMove(fromSq, toSq, moveType uint8) Move {

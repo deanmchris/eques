@@ -5,23 +5,23 @@ import (
 	"math/bits"
 )
 
+// Bijective map chosen: A1 <-> LSB, B1 <-> LSB+1, . . ., G8 <-> MSB-1, H8 <-> MSB
+
 const (
 	FullBB uint64 = 0xffffffffffffffff
 	EmptyBB uint64 = 0x0
 )
 
-var SquareBB [65]uint64
-
 func SetBit(bb uint64, sq uint8) uint64 {
-	return bb | SquareBB[sq]
+	return bb | (1 << sq)
 }
 
 func UnsetBit(bb uint64, sq uint8) uint64 {
-	return bb ^ SquareBB[sq]
+	return bb ^ (1 << sq)
 }
 
 func IsBitset(bb uint64, sq uint8) bool {
-	return bb&SquareBB[sq] != 0
+	return bb&(1 << sq) != 0
 }
 
 func GetLSBpos(bb uint64) uint8 {
@@ -43,11 +43,4 @@ func PrintBB(bb uint64) {
 		fmt.Println()
 	}
 	fmt.Println("    ---------------\n    a b c d e f g h")
-}
-
-func InitBitboards() {
-	for i := 0; i < 64; i++ {
-		// Bijective map chosen: A1 <-> LSB, B1 <-> LSB+1, . . ., G8 <-> MSB-1, H8 <-> MSB
-		SquareBB[i] = 1 << i
-	}
 }

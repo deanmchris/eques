@@ -177,6 +177,43 @@ func (pos Position) String() (boardStr string) {
 	return boardStr
 }
 
+func (pos *Position) IsSideInCheck(side uint8) bool {
+	return pos.SqIsAttacked(side, GetLSBpos(pos.Pieces[King] & pos.Colors[side]))
+}
+
+func (pos *Position) SqIsAttacked(usColor, sq uint8) bool {
+	enemyBB := pos.Colors[usColor^1]
+	usBB := pos.Colors[usColor]
+
+	enemyBishops := pos.Pieces[Bishop] & enemyBB
+	enemyRooks := pos.Pieces[Rook] & enemyBB
+	enemyQueens := pos.Pieces[Queen] & enemyBB
+	enemyKnights := pos.Pieces[Knight] & enemyBB
+	enemyKing := pos.Pieces[King] & enemyBB
+	enemyPawns := pos.Pieces[Pawn] & enemyBB
+
+	intercardinalRays := LookupBishopMoves(sq, enemyBB|usBB)
+	cardinalRaysRays := LookupRookMoves(sq, enemyBB|usBB)
+
+	if intercardinalRays&(enemyBishops|enemyQueens) != 0 {
+		return true
+	}
+	if cardinalRaysRays&(enemyRooks|enemyQueens) != 0 {
+		return true
+	}
+
+	if KnightMoves[sq]&enemyKnights != 0 {
+		return true
+	}
+	if KingMoves[sq]&enemyKing != 0 {
+		return true
+	}
+	if PawnAttacks[usColor][sq]&enemyPawns != 0 {
+		return true
+	}
+	return false
+}
+
 func (pos Position) DoMove(move Move) *Position {
 	toSq := move.ToSq()
 	fromSq := move.FromSq()
@@ -211,7 +248,7 @@ func (pos Position) DoMove(move Move) *Position {
 		if pieceColor == White && toSq-fromSq == 16 {
 			pos.EPSq = toSq-8
 		}
-		if pieceColor == Black && fromSq-toSq == 16{
+		if pieceColor == Black && fromSq-toSq == 16 {
 			pos.EPSq = toSq+8
 		}
 	}
@@ -255,7 +292,7 @@ func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
 
 func (pos *Position) getPieceOnSq(sq uint8) (uint8, uint8) {
 	pieceType := NoType
-	sqBB := SquareBB[sq]
+	sqBB := uint64(1) << sq
 	if pos.Pieces[Pawn] & sqBB != 0 {
 		pieceType = Pawn
 	} else if pos.Pieces[Knight] & sqBB != 0 {
