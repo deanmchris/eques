@@ -120,7 +120,8 @@ func (pos Position) String() (boardStr string) {
 	for i := 56; i >= 0; i -= 8 {
 		boardStr += fmt.Sprintf("%d | ", i/8+1)
 		for j := i; j < i+8; j++ {
-			pieceType, pieceColor := pos.getPieceOnSq(uint8(j))
+			pieceType := pos.getPieceTypeOnSq(uint8(j))
+		    pieceColor := pos.getPieceColorOnSq(uint8(j))
 			var pieceChar rune
 
 			switch pieceType {
@@ -218,25 +219,25 @@ func (pos Position) DoMove(move Move) *Position {
 	toSq := move.ToSq()
 	fromSq := move.FromSq()
 
-	pieceType, pieceColor := pos.getPieceOnSq(fromSq)
-	pos.removePiece(pieceType, pieceColor, fromSq)
+	pieceType := pos.getPieceTypeOnSq(fromSq)
+	pos.removePiece(pieceType, pos.Side, fromSq)
 
 	pos.HalfMove++
 	pos.EPSq = NoSq
 
 	switch move.Type() {
-	case Quiet: pos.putPiece(pieceType, pieceColor, toSq)
-	case Attack: pos.doAttack(pieceType, pieceColor, toSq, toSq)
+	case Quiet: pos.putPiece(pieceType, pos.Side, toSq)
+	case Attack: pos.doAttack(pieceType, pos.Side, toSq, toSq)
 	case WhiteAttackEP: pos.doAttack(pieceType, White, toSq, toSq-8)
 	case BlackAttackEP: pos.doAttack(pieceType, Black, toSq, toSq+8)
-	case PromoQ: pos.putPiece(Queen, pieceColor, toSq)
-	case PromoR: pos.putPiece(Rook, pieceColor, toSq)
-	case PromoB: pos.putPiece(Bishop, pieceColor, toSq)
-	case PromoN: pos.putPiece(Knight, pieceColor, toSq)
-	case PromoAttkQ: pos.doPromoAttack(Queen, pieceColor, toSq)
-	case PromoAttkR: pos.doPromoAttack(Rook, pieceColor, toSq)
-	case PromoAttkB: pos.doPromoAttack(Bishop, pieceColor, toSq)
-	case PromoAttkN: pos.doPromoAttack(Knight, pieceColor, toSq)
+	case PromoQ: pos.putPiece(Queen, pos.Side, toSq)
+	case PromoR: pos.putPiece(Rook, pos.Side, toSq)
+	case PromoB: pos.putPiece(Bishop, pos.Side, toSq)
+	case PromoN: pos.putPiece(Knight, pos.Side, toSq)
+	case PromoAttkQ: pos.doPromoAttack(Queen, pos.Side, toSq)
+	case PromoAttkR: pos.doPromoAttack(Rook, pos.Side, toSq)
+	case PromoAttkB: pos.doPromoAttack(Bishop, pos.Side, toSq)
+	case PromoAttkN: pos.doPromoAttack(Knight, pos.Side, toSq)
 	case WhiteCastleK: pos.doCastle(G1, H1, F1, White)
 	case WhiteCastleQ: pos.doCastle(C1, A1, D1, White)
 	case BlackCastleK: pos.doCastle(G8, H8, F8, Black)
@@ -245,10 +246,10 @@ func (pos Position) DoMove(move Move) *Position {
 
 	if pieceType == Pawn {
 		pos.HalfMove = 0
-		if pieceColor == White && toSq-fromSq == 16 {
+		if pos.Side == White && toSq-fromSq == 16 {
 			pos.EPSq = toSq-8
 		}
-		if pieceColor == Black && fromSq-toSq == 16 {
+		if pos.Side == Black && fromSq-toSq == 16 {
 			pos.EPSq = toSq+8
 		}
 	}
@@ -260,15 +261,15 @@ func (pos Position) DoMove(move Move) *Position {
 }
 
 func (pos *Position) doPromoAttack(promoType, promoColor, toSq uint8) {
-	attackedType, attackedColor := pos.getPieceOnSq(toSq)
-	pos.removePiece(attackedType, attackedColor, toSq)
+	attackedType := pos.getPieceTypeOnSq(toSq)
+	pos.removePiece(attackedType, pos.Side^1, toSq)
 	pos.putPiece(promoType, promoColor, toSq)
 	pos.HalfMove = 0
 }
 
 func (pos *Position) doAttack(attackerType, attackerColor, attackerToSq, attackedSq uint8) {
-	attackedType, attackedColor := pos.getPieceOnSq(attackedSq)
-	pos.removePiece(attackedType, attackedColor, attackedSq)
+	attackedType := pos.getPieceTypeOnSq(attackedSq)
+	pos.removePiece(attackedType, pos.Side^1, attackedSq)
 	pos.putPiece(attackerType, attackerColor, attackerToSq)
 	pos.HalfMove = 0
 }
@@ -290,29 +291,30 @@ func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
 	pos.Colors[pieceColor] = UnsetBit(pos.Colors[pieceColor], sq)
 }
 
-func (pos *Position) getPieceOnSq(sq uint8) (uint8, uint8) {
-	pieceType := NoType
+func (pos *Position) getPieceTypeOnSq(sq uint8) uint8 {
 	sqBB := uint64(1) << sq
 	if pos.Pieces[Pawn] & sqBB != 0 {
-		pieceType = Pawn
+		return Pawn
 	} else if pos.Pieces[Knight] & sqBB != 0 {
-		pieceType = Knight
+		return Knight
 	} else if pos.Pieces[Bishop] & sqBB != 0 {
-		pieceType = Bishop
+		return Bishop
 	} else if pos.Pieces[Rook] & sqBB != 0 {
-		pieceType = Rook
+		return Rook
 	} else if pos.Pieces[Queen] & sqBB != 0 {
-		pieceType = Queen
+		return Queen
 	} else if pos.Pieces[King] & sqBB != 0 {
-		pieceType = King
+		return King
 	} 
+	return NoType
+}
 
-	pieceColor := NoColor
+func (pos *Position) getPieceColorOnSq(sq uint8) uint8 {
+	sqBB := uint64(1) << sq
 	if pos.Colors[White] & sqBB != 0 {
-		pieceColor = White
+		return White
 	} else if pos.Colors[Black] & sqBB != 0 {
-		pieceColor = Black
+		return Black
 	} 
-
-	return uint8(pieceType), uint8(pieceColor)
+	return NoColor
 }
