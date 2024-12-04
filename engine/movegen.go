@@ -361,24 +361,29 @@ func Perft(pos *Position, depth uint8) uint64 {
 	return nodes
 }
 
-func DPerft(pos *Position, depth, divideAt uint8) uint64 {
-	if depth == 0 {
-		return 1
-	}
+func DPerft(pos *Position, depth uint8) uint64 {
+	var helper func(*Position, uint8, uint8)  uint64
 
-	moves := GenMoves(pos)
-	nodes := uint64(0)
-
-	for _, move := range moves {
-		newPos := pos.DoMove(move)
-		if !newPos.IsSideInCheck(newPos.Side ^ 1) {
-			moveNodes := DPerft(newPos, depth-1, divideAt)
-			if depth == divideAt {
-				fmt.Printf("%v: %v\n", move, moveNodes)
-			}
-			nodes += moveNodes
+	helper = func (pos *Position, depth, startDepth uint8) uint64 {
+		if depth == 0 {
+			return 1
 		}
-	}
 
-	return nodes
+		moves := GenMoves(pos)
+		nodes := uint64(0)
+
+		for _, move := range moves {
+			newPos := pos.DoMove(move)
+			if !newPos.IsSideInCheck(newPos.Side ^ 1) {
+				moveNodes := helper(newPos, depth-1, depth)
+				if depth == startDepth {
+					fmt.Printf("%v: %v\n", move, moveNodes)
+				}
+				nodes += moveNodes
+			}
+		}
+		return nodes
+	}
+	
+	return helper(pos, depth, depth)
 }
