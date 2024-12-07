@@ -62,11 +62,11 @@ func (move Move) Type() uint8 {
 	return uint8((move & MoveTypeBitmask) >> 15)
 }
 
-func (move Move) Score() uint32 {
-	return uint32((move & MoveScoreBitmask) >> 19)
+func (move Move) Score() uint16 {
+	return uint16((move & MoveScoreBitmask) >> 19)
 }
 
-func (move *Move) SetScore(score uint32) {
+func (move *Move) SetScore(score uint16) {
 	*move &= FlippedMoveScoreBitmask
 	*move |= (Move(score) << 19)
 }
