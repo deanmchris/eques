@@ -342,9 +342,15 @@ func makePromotionMoves(from, to uint8, deltaToGenQuietOrAttackPromos uint8, mov
 	return moves
 }
 
-func Perft(pos *Position, depth uint8) uint64 {
+func Perft(pos *Position, depth uint8, tt *TranspositionTable[PerftEntry]) uint64 {
 	if depth == 0 {
 		return 1
+	}
+
+	if tt.size > 0 {
+		if entry := tt.Probe(pos.Hash); entry != nil && entry.Depth() == depth {
+			return entry.Nodes()
+		}
 	}
 
 	moves := GenMoves(pos)
@@ -353,20 +359,30 @@ func Perft(pos *Position, depth uint8) uint64 {
 	for _, move := range moves {
 		newPos := pos.DoMove(move)
 		if !newPos.IsSideInCheck(newPos.Side ^ 1) {
-			nodes += Perft(newPos, depth-1)
+			nodes += Perft(newPos, depth-1, tt)
 		}
 
+	}
+
+	if tt.size > 0 {
+		tt.Store(pos.Hash, depth).SetData(pos.Hash, nodes, depth)
 	}
 
 	return nodes
 }
 
-func DPerft(pos *Position, depth uint8) uint64 {
-	var helper func(*Position, uint8, uint8)  uint64
+func DPerft(pos *Position, depth uint8, tt *TranspositionTable[PerftEntry]) uint64 {
+	var helper func(*Position, uint8, uint8, *TranspositionTable[PerftEntry]) uint64
 
-	helper = func (pos *Position, depth, startDepth uint8) uint64 {
+	helper = func(pos *Position, depth, startDepth uint8, tt *TranspositionTable[PerftEntry]) uint64 {
 		if depth == 0 {
 			return 1
+		}
+
+		if tt.size > 0 {
+			if entry := tt.Probe(pos.Hash); entry != nil && entry.Depth() == depth {
+				return entry.Nodes()
+			}
 		}
 
 		moves := GenMoves(pos)
@@ -375,15 +391,20 @@ func DPerft(pos *Position, depth uint8) uint64 {
 		for _, move := range moves {
 			newPos := pos.DoMove(move)
 			if !newPos.IsSideInCheck(newPos.Side ^ 1) {
-				moveNodes := helper(newPos, depth-1, depth)
+				moveNodes := helper(newPos, depth-1, depth, tt)
 				if depth == startDepth {
 					fmt.Printf("%v: %v\n", move, moveNodes)
 				}
 				nodes += moveNodes
 			}
 		}
+
+		if tt.size > 0 {
+			tt.Store(pos.Hash, depth).SetData(pos.Hash, nodes, depth)
+		}
+
 		return nodes
 	}
-	
-	return helper(pos, depth, depth)
+
+	return helper(pos, depth, depth, tt)
 }
