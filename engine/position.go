@@ -42,6 +42,7 @@ var Spoilers = [64]uint8{
 type Position struct {
 	Pieces   [6]uint64
 	Colors   [2]uint64
+	Hash     uint64
 	Side,
 	Castling,
 	EPSq,
@@ -112,6 +113,8 @@ func (pos *Position) LoadFEN(fen string) {
 			pos.Castling |= BlackQueensideRight
 		}
 	}
+
+	pos.Hash = GenHash(pos)
 }
 
 func (pos Position) String() (boardStr string) {
@@ -174,7 +177,8 @@ func (pos Position) String() (boardStr string) {
 		boardStr += SqToCoord(pos.EPSq)
 	}
 
-	boardStr += fmt.Sprintf("\nhalf-move clock: %d\n", pos.HalfMove)
+	boardStr += fmt.Sprintf("\nhalf-move clock: %d", pos.HalfMove)
+	boardStr += fmt.Sprintf("\nzobrist hash: 0x%x\n", pos.Hash)
 	return boardStr
 }
 
@@ -222,6 +226,10 @@ func (pos Position) DoMove(move Move) *Position {
 	fromSq := move.FromSq()
 	pieceType := move.FromType()
 
+	pos.Hash ^= EPSqZobristValues[pos.EPSq]
+	pos.Hash ^= CastlingZobristValues[pos.Castling]
+	pos.Hash ^= SideZobristValues[pos.Side]
+
 	pos.removePiece(pieceType, pos.Side, fromSq)
 
 	pos.HalfMove++
@@ -257,6 +265,10 @@ func (pos Position) DoMove(move Move) *Position {
 	
 	pos.Castling &= Spoilers[fromSq] & Spoilers[toSq]
 	pos.Side ^= 1
+
+	pos.Hash ^= EPSqZobristValues[pos.EPSq]
+	pos.Hash ^= CastlingZobristValues[pos.Castling]
+	pos.Hash ^= SideZobristValues[pos.Side]
 	
 	return &pos
 }
@@ -284,11 +296,13 @@ func (pos *Position) doCastle(kingToSq, rookFromSq, rookToSq uint8) {
 func (pos *Position) putPiece(pieceType, pieceColor, sq uint8) {
 	pos.Pieces[pieceType] = SetBit(pos.Pieces[pieceType], sq)
 	pos.Colors[pieceColor] = SetBit(pos.Colors[pieceColor], sq)
+	pos.Hash ^= PieceZobristValues[pieceColor][pieceType][sq]
 }
 
 func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
 	pos.Pieces[pieceType] = UnsetBit(pos.Pieces[pieceType], sq)
 	pos.Colors[pieceColor] = UnsetBit(pos.Colors[pieceColor], sq)
+	pos.Hash ^= PieceZobristValues[pieceColor][pieceType][sq]
 }
 
 func (pos *Position) getPieceTypeOnSq(sq uint8) uint8 {

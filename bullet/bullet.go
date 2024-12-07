@@ -11,6 +11,7 @@ const (
 
 func init() {
 	engine.InitTables()
+	engine.InitZobristValues()
 }
 
 func main() {
