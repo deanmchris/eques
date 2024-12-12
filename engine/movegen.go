@@ -357,11 +357,12 @@ func Perft(pos *Position, depth uint8, tt *TranspositionTable[PerftEntry]) uint6
 	nodes := uint64(0)
 
 	for _, move := range moves {
-		newPos := pos.DoMove(move)
-		if !newPos.IsSideInCheck(newPos.Side ^ 1) {
-			nodes += Perft(newPos, depth-1, tt)
+		CopyPos(pos, &PositionStack[depth])
+		pos.DoMove(move)
+		if !pos.IsSideInCheck(pos.Side ^ 1) {
+			nodes += Perft(pos, depth-1, tt)
 		}
-
+		CopyPos(&PositionStack[depth], pos)
 	}
 
 	if tt.size > 0 {
@@ -389,14 +390,16 @@ func DPerft(pos *Position, depth uint8, tt *TranspositionTable[PerftEntry]) uint
 		nodes := uint64(0)
 
 		for _, move := range moves {
-			newPos := pos.DoMove(move)
-			if !newPos.IsSideInCheck(newPos.Side ^ 1) {
-				moveNodes := helper(newPos, depth-1, depth, tt)
+			CopyPos(pos, &PositionStack[depth])
+			pos.DoMove(move)
+			if !pos.IsSideInCheck(pos.Side ^ 1) {
+				moveNodes := helper(pos, depth-1, depth, tt)
 				if depth == startDepth {
 					fmt.Printf("%v: %v\n", move, moveNodes)
 				}
 				nodes += moveNodes
 			}
+			CopyPos(&PositionStack[depth], pos)
 		}
 
 		if tt.size > 0 {

@@ -26,7 +26,11 @@ const (
 	BlackQueensideRight uint8 = 0x1
 
 	FENStartPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
+
+	PositionStackSize = 80
 )
+
+var PositionStack [80]Position
 
 var Spoilers = [64]uint8{
 	0xb, 0xf, 0xf, 0xf, 0x3, 0xf, 0xf, 0x7,
@@ -53,6 +57,16 @@ func NewPosition(fen string) Position {
 	pos := Position{}
 	pos.LoadFEN(fen)
 	return pos
+}
+
+func CopyPos(oldPos, newPos *Position) {
+	newPos.Pieces = oldPos.Pieces
+	newPos.Colors = oldPos.Colors
+	newPos.Hash = oldPos.Hash
+	newPos.Side = oldPos.Side
+	newPos.Castling = oldPos.Castling
+	newPos.EPSq = oldPos.EPSq
+	newPos.HalfMove = oldPos.HalfMove
 }
 
 func (pos *Position) LoadFEN(fen string) {
@@ -221,7 +235,7 @@ func (pos *Position) SqIsAttacked(usColor, sq uint8) bool {
 	return false
 }
 
-func (pos Position) DoMove(move Move) *Position {
+func (pos *Position) DoMove(move Move) {
 	toSq := move.ToSq()
 	fromSq := move.FromSq()
 	pieceType := move.FromType()
@@ -269,8 +283,6 @@ func (pos Position) DoMove(move Move) *Position {
 	pos.Hash ^= EPSqZobristValues[pos.EPSq]
 	pos.Hash ^= CastlingZobristValues[pos.Castling]
 	pos.Hash ^= SideZobristValues[pos.Side]
-	
-	return &pos
 }
 
 func (pos *Position) doEPAttack(toSq, capturedPawnSq uint8) {
