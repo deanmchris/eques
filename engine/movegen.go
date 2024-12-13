@@ -11,9 +11,17 @@ const (
 	B1_C1_D1_Mask = 0xe
 	F8_G8_Mask    = 0x6000000000000000
 	B8_C8_D8_Mask = 0xe00000000000000
+
+	PosStackSize = 15
 )
 
-func GenMoves(pos *Position) (moves []Move) {
+type PerftData struct {
+	TT TranspositionTable[PerftEntry]
+	posStack [PosStackSize]Position
+	Pos Position
+}
+
+func genMoves(pos *Position) (moves []Move) {
 	moves = make([]Move, 0, StartingMoveListSize)
 	usBB := pos.Colors[pos.Side]
 	enemyBB := pos.Colors[pos.Side^1]
@@ -342,72 +350,66 @@ func makePromotionMoves(from, to uint8, deltaToGenQuietOrAttackPromos uint8, mov
 	return moves
 }
 
-func Perft(pos *Position, depth uint8, tt *TranspositionTable[PerftEntry]) uint64 {
+func Perft(pd *PerftData, depth, ply uint8) uint64 {
 	if depth == 0 {
 		return 1
 	}
 
-	if tt.size > 0 {
-		if entry := tt.Probe(pos.Hash); entry != nil && entry.Depth() == depth {
+	if pd.TT.size > 0 {
+		if entry := pd.TT.Probe(pd.Pos.Hash); entry != nil && entry.Depth() == depth {
 			return entry.Nodes()
 		}
 	}
 
-	moves := GenMoves(pos)
+	moves := genMoves(&pd.Pos)
 	nodes := uint64(0)
 
 	for _, move := range moves {
-		CopyPos(pos, &PositionStack[depth])
-		pos.DoMove(move)
-		if !pos.IsSideInCheck(pos.Side ^ 1) {
-			nodes += Perft(pos, depth-1, tt)
+		CopyPos(&pd.Pos, &pd.posStack[ply])
+		pd.Pos.DoMove(move)
+		if !pd.Pos.IsSideInCheck(pd.Pos.Side ^ 1) {
+			nodes += Perft(pd, depth-1, ply+1)
 		}
-		CopyPos(&PositionStack[depth], pos)
+		CopyPos(&pd.posStack[ply], &pd.Pos)
 	}
 
-	if tt.size > 0 {
-		tt.Store(pos.Hash, depth).SetData(pos.Hash, nodes, depth)
+	if pd.TT.size > 0 {
+		pd.TT.Store(pd.Pos.Hash, depth).SetData(pd.Pos.Hash, nodes, depth)
 	}
 
 	return nodes
 }
 
-func DPerft(pos *Position, depth uint8, tt *TranspositionTable[PerftEntry]) uint64 {
-	var helper func(*Position, uint8, uint8, *TranspositionTable[PerftEntry]) uint64
-
-	helper = func(pos *Position, depth, startDepth uint8, tt *TranspositionTable[PerftEntry]) uint64 {
-		if depth == 0 {
-			return 1
-		}
-
-		if tt.size > 0 {
-			if entry := tt.Probe(pos.Hash); entry != nil && entry.Depth() == depth {
-				return entry.Nodes()
-			}
-		}
-
-		moves := GenMoves(pos)
-		nodes := uint64(0)
-
-		for _, move := range moves {
-			CopyPos(pos, &PositionStack[depth])
-			pos.DoMove(move)
-			if !pos.IsSideInCheck(pos.Side ^ 1) {
-				moveNodes := helper(pos, depth-1, depth, tt)
-				if depth == startDepth {
-					fmt.Printf("%v: %v\n", move, moveNodes)
-				}
-				nodes += moveNodes
-			}
-			CopyPos(&PositionStack[depth], pos)
-		}
-
-		if tt.size > 0 {
-			tt.Store(pos.Hash, depth).SetData(pos.Hash, nodes, depth)
-		}
-
-		return nodes
+func DPerft(pd *PerftData, depth, startDepth, ply uint8) uint64 {
+	if depth == 0 {
+		return 1
 	}
 
-	return helper(pos, depth, depth, tt)
+	if pd.TT.size > 0 {
+		if entry := pd.TT.Probe(pd.Pos.Hash); entry != nil && entry.Depth() == depth {
+			return entry.Nodes()
+		}
+	}
+
+	moves := genMoves(&pd.Pos)
+	nodes := uint64(0)
+
+	for _, move := range moves {
+		CopyPos(&pd.Pos, &pd.posStack[ply])
+		pd.Pos.DoMove(move)
+		if !pd.Pos.IsSideInCheck(pd.Pos.Side ^ 1) {
+			moveNodes := DPerft(pd, depth-1, startDepth, ply+1)
+			if depth == startDepth {
+				fmt.Printf("%v: %v\n", move, moveNodes)
+			}
+			nodes += moveNodes
+		}
+		CopyPos(&pd.posStack[ply], &pd.Pos)
+	}
+
+	if pd.TT.size > 0 {
+		pd.TT.Store(pd.Pos.Hash, depth).SetData(pd.Pos.Hash, nodes, depth)
+	}
+
+	return nodes
 }
