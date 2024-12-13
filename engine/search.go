@@ -68,8 +68,6 @@ func Search(sd *SearchData) Move {
 			sd.totalNodes, 
 			&sd.pvLineStack[0],
 		)
-
-		// info depth 2 score cp -38 time 22 nodes 132 nps 2659 pv e7e6 e2e4
 	}
 
 	return bestMove
