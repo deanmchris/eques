@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	MaxDepth               = 80
+	MaxDepth               = 60
+	MaxPly                 = 80
 	NullMove          Move = 0
 	LongestCheckmate int16 = 9000
 )
 
 type PVLine struct {
-	moves [MaxDepth]Move
+	moves [MaxPly]Move
 	cnt   uint8
 }
 
@@ -47,8 +48,8 @@ func (pv *PVLine) String() string {
 }
 
 type SearchData struct {
-	posStack    [MaxDepth]Position
-	pvLineStack [MaxDepth]PVLine
+	posStack    [MaxPly]Position
+	pvLineStack [MaxPly]PVLine
 	Pos         Position
 	totalNodes  uint64
 }
@@ -77,7 +78,7 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 	sd.totalNodes++
 
 	if depth == 0 {
-		return evaluatePosition(&sd.Pos)
+		return qsearch(sd, alpha, beta, ply)
 	}
 
 	noLegalMovesFlag := true
@@ -93,6 +94,56 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 
 		noLegalMovesFlag = false
 		score := -negamax(sd, -beta, -alpha, depth-1, ply+1)
+
+		if score >= beta {
+			return beta
+		}
+
+		if score > alpha {
+			sd.pvLineStack[ply].clear()
+			sd.pvLineStack[ply].setBestMove(move)
+			sd.pvLineStack[ply].extend(&sd.pvLineStack[ply+1])
+			alpha = score
+		}
+
+		CopyPos(&sd.posStack[ply], &sd.Pos)
+	}
+
+	if noLegalMovesFlag {
+		sd.pvLineStack[ply].clear()
+		if sd.Pos.IsSideInCheck(sd.Pos.Side) {
+			return -InfinityCPValue + int16(ply)
+		}
+		return DrawCPValue
+	}
+
+	return alpha
+}
+
+func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
+	eval := evaluatePosition(&sd.Pos)
+
+	if eval >= beta {
+		return beta
+	}
+
+	if eval > alpha {
+		alpha = eval
+	}
+
+	noLegalMovesFlag := true
+
+	for _, move := range genAttacksAndQueenPromos(&sd.Pos) {
+		CopyPos(&sd.Pos, &sd.posStack[ply])
+		sd.Pos.DoMove(move)
+
+		if sd.Pos.IsSideInCheck(sd.Pos.Side ^ 1) {
+			CopyPos(&sd.posStack[ply], &sd.Pos)
+			continue
+		}
+
+		noLegalMovesFlag = false
+		score := -qsearch(sd, -beta, -alpha, ply+1)
 
 		if score >= beta {
 			return beta
