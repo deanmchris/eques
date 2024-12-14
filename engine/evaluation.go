@@ -30,7 +30,7 @@ func evaluateMaterial(pos *Position, side uint8, scores []int16) {
 	piecesBB := pos.Colors[side] & ^pos.Pieces[King]
 	for piecesBB != 0 {
 		sq := GetLSBpos(piecesBB)
-		scores[side] += PieceValue[pos.getPieceTypeOnSq(sq)]
+		scores[side] += PieceValue[pos.GetPieceTypeOnSq(sq)]
 		piecesBB &= (piecesBB - 1)
 	}
 }

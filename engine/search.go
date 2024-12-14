@@ -250,7 +250,7 @@ func scoreMoves(sd *SearchData, moves []Move, bestMoveFromPrevDepth Move) {
 		if move.Equal(bestMoveFromPrevDepth) {
 			move.SetScore(BestMoveScore)
 		} else {
-			mvv_lva_score := MVV_LVA[move.FromType()][sd.Pos.getPieceTypeOnSq(move.ToSq())]
+			mvv_lva_score := MVV_LVA[move.FromType()][sd.Pos.GetPieceTypeOnSq(move.ToSq())]
 			move.SetScore(mvv_lva_score)
 		}
 	}

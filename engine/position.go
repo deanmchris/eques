@@ -136,7 +136,7 @@ func (pos Position) String() (boardStr string) {
 	for i := 56; i >= 0; i -= 8 {
 		boardStr += fmt.Sprintf("%d | ", i/8+1)
 		for j := i; j < i+8; j++ {
-			pieceType := pos.getPieceTypeOnSq(uint8(j))
+			pieceType := pos.GetPieceTypeOnSq(uint8(j))
 		    pieceColor := pos.getPieceColorOnSq(uint8(j))
 			var pieceChar rune
 
@@ -291,7 +291,7 @@ func (pos *Position) doEPAttack(toSq, capturedPawnSq uint8) {
 }
 
 func (pos *Position) doAttack(typeOnToSq, toSq uint8) {
-	attackedType := pos.getPieceTypeOnSq(toSq)
+	attackedType := pos.GetPieceTypeOnSq(toSq)
 	pos.removePiece(attackedType, pos.Side^1, toSq)
 	pos.putPiece(typeOnToSq, pos.Side, toSq)
 	pos.HalfMove = 0
@@ -316,7 +316,7 @@ func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
 	pos.Hash ^= PieceZobristValues[pieceColor][pieceType][sq]
 }
 
-func (pos *Position) getPieceTypeOnSq(sq uint8) uint8 {
+func (pos *Position) GetPieceTypeOnSq(sq uint8) uint8 {
 	sqBB := uint64(1) << sq
 	if pos.Pieces[Pawn] & sqBB != 0 {
 		return Pawn

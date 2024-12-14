@@ -1,11 +1,14 @@
 package engine
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	MovesToGoTimingFormat = iota
 	SuddenDeathTimeFormat
 	InfiniteTimeFormat
+	NoFormat
 )
 
 type Timer struct {

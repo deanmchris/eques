@@ -2,6 +2,7 @@ package main
 
 import (
 	"bullet/engine"
+	"bullet/uci"
 	"runtime/debug"
 )
 
@@ -20,4 +21,5 @@ func main() {
 	// higher memory usage when the engine is running. The current value seems to be a good balance
 	// between these considerations.
 	debug.SetGCPercent(GC_TARGET_PERCENTAGE)
+	uci.StartUCIProtocolInterface()	
 }
