@@ -11,7 +11,17 @@ const (
 	MaxPly                 = 80
 	NullMove          Move = 0
 	LongestCheckmate int16 = 9000
+	BestMoveScore   uint16 = 8000
 )
+
+var MVV_LVA = [6][7]uint16{
+	{52, 54, 56, 58, 60, 0, 0}, // pawn attacker
+	{42, 44, 46, 48, 50, 0, 0}, // knight attacker
+	{32, 34, 36, 38, 40, 0, 0}, // bishop attacker
+	{22, 24, 26, 28, 30, 0, 0}, // rook attacker
+	{12, 14, 16, 18, 20, 0, 0}, // queen attacker
+	{2,   4,  6,  8, 10, 0, 0}, // king attacker
+}
 
 type PVLine struct {
 	moves [MaxPly]Move
@@ -35,6 +45,14 @@ func (pv *PVLine) clear() {
 	pv.cnt = 0
 }
 
+func (pv *PVLine) copy(other *PVLine) {
+	pv.cnt = 0
+	for i := uint8(0); i < other.cnt; i++ {
+		pv.moves[i] = other.moves[i]
+		pv.cnt++
+	}
+}
+
 func (pv *PVLine) String() string {
 	sb := strings.Builder{}
 	for i := uint8(0); i < pv.cnt; i++ {
@@ -48,11 +66,13 @@ type SearchData struct {
 	posStack    [MaxPly]Position
 	pvLineStack [MaxPly]PVLine
 	Pos         Position
+	prevPV      PVLine
 	totalNodes  uint64
 }
 
 func Search(sd *SearchData) Move {
 	sd.totalNodes = 0
+	sd.prevPV.clear()
 	bestMove := NullMove
 
 	for depth := uint8(1); depth <= MaxDepth; depth++ {
@@ -66,6 +86,8 @@ func Search(sd *SearchData) Move {
 			sd.totalNodes, 
 			&sd.pvLineStack[0],
 		)
+
+		sd.prevPV.copy(&sd.pvLineStack[0])
 	}
 
 	return bestMove
@@ -77,11 +99,15 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 	}
 
 	sd.totalNodes++
-	sd.pvLineStack[ply].clear()
 
+	sd.pvLineStack[ply].clear()
 	noLegalMovesFlag := true
 
-	for _, move := range genMoves(&sd.Pos) {
+	moves := genMoves(&sd.Pos)
+	scoreMoves(sd, moves, sd.prevPV.moves[ply])
+	moveOrderer := createMoveOrderer(moves)
+
+	for move := moveOrderer(); move != NullMove; move = moveOrderer() {
 		CopyPos(&sd.Pos, &sd.posStack[ply])
 		sd.Pos.DoMove(move)
 
@@ -117,8 +143,8 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 
 func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 	sd.totalNodes++
-	sd.pvLineStack[ply].clear()
 
+	sd.pvLineStack[ply].clear()
 	eval := evaluatePosition(&sd.Pos)
 
 	if eval >= beta {
@@ -129,7 +155,11 @@ func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 		alpha = eval
 	}
 
-	for _, move := range genAttacksAndQueenPromos(&sd.Pos) {
+	moves := genAttacksAndQueenPromos(&sd.Pos)
+	scoreMoves(sd, moves, sd.prevPV.moves[ply])
+	moveOrderer := createMoveOrderer(moves)
+
+	for move := moveOrderer(); move != NullMove; move = moveOrderer() {
 		CopyPos(&sd.Pos, &sd.posStack[ply])
 		sd.Pos.DoMove(move)
 
@@ -153,6 +183,45 @@ func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 	}
 
 	return alpha
+}
+
+func createMoveOrderer(moves []Move) func() Move {
+	startedOfUnsortedSublist := 0
+	return func() Move {
+		if startedOfUnsortedSublist == len(moves) {
+			return NullMove
+		}
+
+		bestMove := moves[startedOfUnsortedSublist]
+		bestMoveIdx := startedOfUnsortedSublist
+
+		for i := startedOfUnsortedSublist+1; i < len(moves); i++ {
+			move := moves[i]
+			if move.Score() > bestMove.Score() {
+				bestMove = move
+				bestMoveIdx = i
+			}
+		}
+
+		tmp := moves[startedOfUnsortedSublist]
+		moves[startedOfUnsortedSublist] = bestMove
+		moves[bestMoveIdx] = tmp
+		startedOfUnsortedSublist++
+
+		return bestMove
+	}
+}
+
+func scoreMoves(sd *SearchData, moves []Move, bestMoveFromPrevDepth Move) {
+	for i := 0; i < len(moves); i++ {
+		move := &moves[i]
+		if move.Equal(bestMoveFromPrevDepth) {
+			move.SetScore(BestMoveScore)
+		} else {
+			mvv_lva_score := MVV_LVA[move.FromType()][sd.Pos.getPieceTypeOnSq(move.ToSq())]
+			move.SetScore(mvv_lva_score)
+		}
+	}
 }
 
 func convertToUCIScore(score int16) string {

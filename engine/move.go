@@ -71,6 +71,10 @@ func (move *Move) SetScore(score uint16) {
 	*move |= (Move(score) << 19)
 }
 
+func (move Move) Equal(other Move) bool {
+	return (move & FlippedMoveScoreBitmask) == (other & FlippedMoveScoreBitmask)
+}
+
 func (move Move) String() string {
 	from, to, moveType := move.FromSq(), move.ToSq(), move.Type()
 
