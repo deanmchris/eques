@@ -9,6 +9,8 @@ const (
 	SuddenDeathTimeFormat
 	InfiniteTimeFormat
 	NoFormat
+
+	TimeBuffer int64 = 150
 )
 
 type Timer struct {
@@ -29,6 +31,10 @@ func (timer *Timer) CalculateSearchTime(timeFormat int, movesToGo, timeLeft, tim
 		timer.infiniteTime = false
 	case InfiniteTimeFormat:
 		timer.infiniteTime = true
+	}
+
+	if timer.searchTime > TimeBuffer {
+		timer.searchTime -= TimeBuffer
 	}
 }
 
