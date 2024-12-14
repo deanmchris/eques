@@ -3,34 +3,110 @@ package engine
 const (
 	InfinityCPValue int16 = 10_000
 	DrawCPValue     int16 = 0
-
-	PawnCPValue   int16 = 100
-	KnightCPValue int16 = 300
-	BishopCPValue int16 = 300
-	RookCPValue   int16 = 500
-	QueenCPValue  int16 = 950
 )
 
-var PieceValue = [5]int16{
-	PawnCPValue,
-	KnightCPValue,
-	BishopCPValue,
-	RookCPValue,
-	QueenCPValue,
+var PieceSquareTable = [6][64]int16{
+	{
+		100, 100, 100, 100, 100, 100, 100, 100,
+		160, 160, 160, 160, 170, 160, 160, 160,
+		140, 140, 140, 150, 160, 140, 140, 140,
+		120, 120, 120, 140, 150, 120, 120, 120,
+		105, 105, 115, 130, 140, 110, 105, 105,
+		105, 105, 110, 120, 130, 105, 105, 105,
+		105, 105, 105, 70, 70, 105, 105, 105,
+		100, 100, 100, 100, 100, 100, 100, 100,
+	},
+	{
+		290, 300, 300, 300, 300, 300, 300, 290,
+		300, 305, 305, 305, 305, 305, 305, 300,
+		300, 305, 325, 325, 325, 325, 305, 300,
+		300, 305, 325, 325, 325, 325, 305, 300,
+		300, 305, 325, 325, 325, 325, 305, 300,
+		300, 305, 320, 325, 325, 325, 305, 300,
+		300, 305, 305, 305, 305, 305, 305, 300,
+		290, 310, 300, 300, 300, 300, 310, 290,
+	},
+	{
+		300, 320, 320, 320, 320, 320, 320, 300,
+		305, 320, 320, 320, 320, 320, 320, 305,
+		310, 320, 320, 325, 325, 320, 320, 310,
+		310, 330, 330, 350, 350, 330, 330, 310,
+		325, 325, 330, 345, 345, 330, 325, 325,
+		325, 325, 325, 330, 330, 325, 325, 325,
+		310, 325, 325, 330, 330, 325, 325, 310,
+		300, 310, 310, 310, 310, 310, 310, 300,
+	},
+	{
+		500, 500, 500, 500, 500, 500, 500, 500,
+		515, 515, 515, 520, 520, 515, 515, 515,
+		500, 500, 500, 500, 500, 500, 500, 500,
+		500, 500, 500, 500, 500, 500, 500, 500,
+		500, 500, 500, 500, 500, 500, 500, 500,
+		500, 500, 500, 500, 500, 500, 500, 500,
+		500, 500, 500, 500, 500, 500, 500, 500,
+		500, 500, 500, 510, 510, 510, 500, 500,
+	},
+	{
+		870, 880, 890, 890, 890, 890, 880, 870,
+		880, 890, 895, 895, 895, 895, 890, 880,
+		890, 895, 910, 910, 910, 910, 895, 890,
+		890, 895, 910, 920, 920, 910, 895, 890,
+		890, 895, 910, 920, 920, 910, 895, 890,
+		890, 895, 895, 895, 895, 895, 895, 890,
+		880, 890, 895, 895, 895, 895, 890, 880,
+		870, 880, 890, 890, 890, 890, 880, 870,
+	},
+	{
+		0, 0, 0,   0,   0,  0, 0,  0,
+		0, 0, 0,   0,   0,  0, 0,  0,
+		0, 0, 0,   0,   0,  0, 0,  0,
+		0, 0, 0,   20,  20, 0, 0,  0,
+		0, 0, 0,   20,  20, 0, 0,  0,
+		0, 0, 0,   0,   0,  0, 0,  0,
+		0, 0, 0,  -10, -10, 0, 0,  0,
+		0, 0, 20, -10, -10, 0, 20, 0,
+	},
+}
+
+var FlipSq = [2][64]uint8{
+	{
+		A8, B8, C8, D8, E8, F8, G8, H8,
+		A7, B7, C7, D7, E7, F7, G7, H7,
+		A6, B6, C6, D6, E6, F6, G6, H6,
+		A5, B5, C5, D5, E5, F5, G5, H5,
+		A4, B4, C4, D4, E4, F4, G4, H4,
+		A3, B3, C3, D3, E3, F3, G3, H3,
+		A2, B2, C2, D2, E2, F2, G2, H2,
+		A1, B1, C1, D1, E1, F1, G1, H1,
+	},
+	{
+		A1, B1, C1, D1, E1, F1, G1, H1,
+		A2, B2, C2, D2, E2, F2, G2, H2,
+		A3, B3, C3, D3, E3, F3, G3, H3,
+		A4, B4, C4, D4, E4, F4, G4, H4,
+		A5, B5, C5, D5, E5, F5, G5, H5,
+		A6, B6, C6, D6, E6, F6, G6, H6,
+		A7, B7, C7, D7, E7, F7, G7, H7,
+		A8, B8, C8, D8, E8, F8, G8, H8,
+	},
+}
+
+func EvalPos(pos *Position) int16 {
+	return evaluatePosition(pos)
 }
 
 func evaluatePosition(pos *Position) int16 {
 	scores := []int16{0, 0}
-	evaluateMaterial(pos, White, scores)
-	evaluateMaterial(pos, Black, scores)
+	evaluateSide(pos, White, scores)
+	evaluateSide(pos, Black, scores)
 	return scores[pos.Side] - scores[pos.Side^1]
 }
 
-func evaluateMaterial(pos *Position, side uint8, scores []int16) {
-	piecesBB := pos.Colors[side] & ^pos.Pieces[King]
+func evaluateSide(pos *Position, side uint8, scores []int16) {
+	piecesBB := pos.Colors[side]
 	for piecesBB != 0 {
 		sq := GetLSBpos(piecesBB)
-		scores[side] += PieceValue[pos.GetPieceTypeOnSq(sq)]
+		scores[side] += PieceSquareTable[pos.GetPieceTypeOnSq(sq)][FlipSq[side][sq]]
 		piecesBB &= (piecesBB - 1)
 	}
 }
