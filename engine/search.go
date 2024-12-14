@@ -22,11 +22,8 @@ func (pv *PVLine) bestMove() Move {
 	return pv.moves[0]
 }
 
-func (pv *PVLine) setBestMove(move Move) {
+func (pv *PVLine) update(move Move, other *PVLine) {
 	pv.moves[0] = move
-}
-
-func (pv *PVLine) extend(other *PVLine) {
 	pv.cnt = 1
 	for i := uint8(0); i < other.cnt; i++ {
 		pv.moves[i+1] = other.moves[i]
@@ -58,7 +55,7 @@ func Search(sd *SearchData) Move {
 	sd.totalNodes = 0
 	bestMove := NullMove
 
-	for depth := uint8(1); depth <= 10; depth++ {
+	for depth := uint8(1); depth <= MaxDepth; depth++ {
 		score := negamax(sd, -InfinityCPValue, InfinityCPValue, depth, 0)
 		bestMove = sd.pvLineStack[0].bestMove()
 
@@ -75,11 +72,12 @@ func Search(sd *SearchData) Move {
 }
 
 func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
-	sd.totalNodes++
-
 	if depth == 0 {
 		return qsearch(sd, alpha, beta, ply)
 	}
+
+	sd.totalNodes++
+	sd.pvLineStack[ply].clear()
 
 	noLegalMovesFlag := true
 
@@ -100,9 +98,7 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 		}
 
 		if score > alpha {
-			sd.pvLineStack[ply].clear()
-			sd.pvLineStack[ply].setBestMove(move)
-			sd.pvLineStack[ply].extend(&sd.pvLineStack[ply+1])
+			sd.pvLineStack[ply].update(move, &sd.pvLineStack[ply+1])
 			alpha = score
 		}
 
@@ -110,7 +106,6 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 	}
 
 	if noLegalMovesFlag {
-		sd.pvLineStack[ply].clear()
 		if sd.Pos.IsSideInCheck(sd.Pos.Side) {
 			return -InfinityCPValue + int16(ply)
 		}
@@ -121,6 +116,9 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 }
 
 func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
+	sd.totalNodes++
+	sd.pvLineStack[ply].clear()
+
 	eval := evaluatePosition(&sd.Pos)
 
 	if eval >= beta {
@@ -131,8 +129,6 @@ func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 		alpha = eval
 	}
 
-	noLegalMovesFlag := true
-
 	for _, move := range genAttacksAndQueenPromos(&sd.Pos) {
 		CopyPos(&sd.Pos, &sd.posStack[ply])
 		sd.Pos.DoMove(move)
@@ -142,7 +138,6 @@ func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 			continue
 		}
 
-		noLegalMovesFlag = false
 		score := -qsearch(sd, -beta, -alpha, ply+1)
 
 		if score >= beta {
@@ -150,21 +145,11 @@ func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 		}
 
 		if score > alpha {
-			sd.pvLineStack[ply].clear()
-			sd.pvLineStack[ply].setBestMove(move)
-			sd.pvLineStack[ply].extend(&sd.pvLineStack[ply+1])
+			sd.pvLineStack[ply].update(move, &sd.pvLineStack[ply+1])
 			alpha = score
 		}
 
 		CopyPos(&sd.posStack[ply], &sd.Pos)
-	}
-
-	if noLegalMovesFlag {
-		sd.pvLineStack[ply].clear()
-		if sd.Pos.IsSideInCheck(sd.Pos.Side) {
-			return -InfinityCPValue + int16(ply)
-		}
-		return DrawCPValue
 	}
 
 	return alpha
