@@ -75,7 +75,6 @@ type SearchData struct {
 func Search(sd *SearchData) Move {
 	sd.totalNodes = 0
 	sd.prevPV.clear()
-	sd.Timer.searchTime = 300000
 
 	bestMove := NullMove
 	sd.Timer.Start()
