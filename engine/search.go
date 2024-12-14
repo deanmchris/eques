@@ -94,7 +94,7 @@ func Search(sd *SearchData) Move {
 		nps := (sd.totalNodes * 1000) / uint64(totalTime+1)
 
 		fmt.Printf(
-			"info depth %d time %d score cp %s nodes %d pv %snps %d\n",
+			"info depth %d time %d score %s nodes %d pv %snps %d\n",
 			depth,
 			totalTime,
 			convertToUCIScore(score), 
@@ -259,10 +259,10 @@ func scoreMoves(sd *SearchData, moves []Move, bestMoveFromPrevDepth Move) {
 func convertToUCIScore(score int16) string {
 	scoreAbs := utils.Abs(score)
 	if scoreAbs >= LongestCheckmate && scoreAbs % 2 == 0 {
-		return fmt.Sprintf("mate %d", (InfinityCPValue - score) / 2)
+		return fmt.Sprintf("mate %d", (InfinityCPValue - scoreAbs) / 2)
 	}
 	if scoreAbs >= LongestCheckmate && scoreAbs % 2 == 1 {
-		return fmt.Sprintf("mate %d", (InfinityCPValue - score) / 2 + 1)
+		return fmt.Sprintf("mate %d", (InfinityCPValue - scoreAbs) / 2 + 1)
 	}
-	return fmt.Sprintf("%d", score)
+	return fmt.Sprintf("cp %d", score)
 }
