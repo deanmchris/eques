@@ -113,6 +113,7 @@ func (pos *Position) LoadFEN(fen string) {
 	halfMoveCounter, _ := strconv.Atoi(halfMove)
 	pos.HalfMove = uint8(halfMoveCounter)
 
+	pos.Castling = 0
 	for _, char := range castling {
 		switch char {
 		case 'K':
