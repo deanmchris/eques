@@ -4,6 +4,7 @@ import (
 	"bullet/utils"
 	"fmt"
 	"strings"
+	"time"
 )
 
 const (
@@ -65,6 +66,7 @@ func (pv *PVLine) String() string {
 type SearchData struct {
 	posStack    [MaxPly]Position
 	pvLineStack [MaxPly]PVLine
+	Timer       Timer
 	Pos         Position
 	prevPV      PVLine
 	totalNodes  uint64
@@ -73,20 +75,35 @@ type SearchData struct {
 func Search(sd *SearchData) Move {
 	sd.totalNodes = 0
 	sd.prevPV.clear()
+	sd.Timer.searchTime = 300000
+
 	bestMove := NullMove
+	sd.Timer.Start()
+	totalTime := int64(0)
 
 	for depth := uint8(1); depth <= MaxDepth; depth++ {
+		startTime := time.Now()
 		score := negamax(sd, -InfinityCPValue, InfinityCPValue, depth, 0)
+		endTime := time.Since(startTime)
+
+		if sd.Timer.Stopped {
+			break
+		}
+		
 		bestMove = sd.pvLineStack[0].bestMove()
+		totalTime += endTime.Milliseconds()
+		nps := (sd.totalNodes * 1000) / uint64(totalTime+1)
 
 		fmt.Printf(
-			"info depth %d score cp %s nodes %d pv %s\n",
+			"info depth %d time %d score cp %s nodes %d pv %snps %d\n",
 			depth,
+			totalTime,
 			convertToUCIScore(score), 
 			sd.totalNodes, 
 			&sd.pvLineStack[0],
+			nps,
 		)
-
+		
 		sd.prevPV.copy(&sd.pvLineStack[0])
 	}
 
@@ -94,6 +111,14 @@ func Search(sd *SearchData) Move {
 }
 
 func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
+	if sd.totalNodes & 2047 == 0 {
+		sd.Timer.Update()
+	}
+
+	if sd.Timer.Stopped {
+		return 0
+	}
+
 	if depth == 0 {
 		return qsearch(sd, alpha, beta, ply)
 	}
@@ -142,6 +167,14 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 }
 
 func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
+	if sd.totalNodes & 2047 == 0 {
+		sd.Timer.Update()
+	}
+
+	if sd.Timer.Stopped {
+		return 0
+	}
+
 	sd.totalNodes++
 
 	sd.pvLineStack[ply].clear()
