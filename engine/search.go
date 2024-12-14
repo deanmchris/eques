@@ -67,16 +67,33 @@ func (pv *PVLine) String() string {
 type SearchData struct {
 	posStack    [MaxPly]Position
 	pvLineStack [MaxPly]PVLine
+	posHistory  [MaxGameLength]uint64
 	Timer       Timer
 	Pos         Position
 	prevPV      PVLine
 	totalNodes  uint64
+	historyIdx  uint16
 }
 
 func (sd *SearchData) Reset() {
 	sd.posStack = [MaxPly]Position{}
 	sd.pvLineStack = [MaxPly]PVLine{}
 	sd.Pos = Position{}
+	sd.posHistory = [MaxGameLength]uint64{}
+	sd.historyIdx = 0
+}
+
+func (sd *SearchData) AddCurrPosToHistory() {
+	sd.posHistory[sd.historyIdx] = sd.Pos.Hash
+	sd.historyIdx++
+}
+
+func (sd *SearchData) PopFromPosHistory() {
+	sd.historyIdx--
+}
+
+func (sd *SearchData) ClearPosHistory() {
+	sd.historyIdx = 0
 }
 
 func Search(sd *SearchData) Move {
@@ -125,13 +142,17 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 		return 0
 	}
 
+	sd.pvLineStack[ply].clear()
+
+	if ply > 0 && nodeIsDraw(sd) {
+		return DrawCPValue
+	}
+
 	if depth == 0 {
 		return qsearch(sd, alpha, beta, ply)
 	}
 
 	sd.totalNodes++
-
-	sd.pvLineStack[ply].clear()
 	noLegalMovesFlag := true
 
 	moves := genMoves(&sd.Pos)
@@ -147,8 +168,13 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 			continue
 		}
 
+		sd.AddCurrPosToHistory()
+
 		noLegalMovesFlag = false
 		score := -negamax(sd, -beta, -alpha, depth-1, ply+1)
+
+		CopyPos(&sd.posStack[ply], &sd.Pos)
+		sd.PopFromPosHistory()
 
 		if score >= beta {
 			return beta
@@ -158,8 +184,6 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 			sd.pvLineStack[ply].update(move, &sd.pvLineStack[ply+1])
 			alpha = score
 		}
-
-		CopyPos(&sd.posStack[ply], &sd.Pos)
 	}
 
 	if noLegalMovesFlag {
@@ -261,6 +285,20 @@ func scoreMoves(sd *SearchData, moves []Move, bestMoveFromPrevDepth Move) {
 			move.SetScore(mvv_lva_score)
 		}
 	}
+}
+
+func nodeIsDraw(sd *SearchData) bool {
+	if sd.Pos.HalfMove >= 100 {
+		return true
+	}
+
+	for i := uint16(0); i < sd.historyIdx-1; i++ {
+		if sd.posHistory[i] == sd.Pos.Hash {
+			return true
+		}
+	}
+
+	return false
 }
 
 func convertToUCIScore(score int16) string {

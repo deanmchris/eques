@@ -60,11 +60,15 @@ func positionCommandReponse(sd *engine.SearchData, tokens *TokensQueue) {
 		sd.Pos.LoadFEN(engine.FENStartPosition)
 	}
 
+	sd.ClearPosHistory()
+	sd.AddCurrPosToHistory()
+
 	if tokens.Size() > 0 && tokens.Pop() == "moves" {
 		for tokens.Size() > 0 {
 			moveToken := tokens.Pop()
 			move := parseUCIMove(sd, moveToken)
 			sd.Pos.DoMove(move)
+			sd.AddCurrPosToHistory()
 		}
 	}
 }
@@ -181,6 +185,7 @@ func StartUCIProtocolInterface() {
 
 	UCICommandReponse()
 	searchData.Pos.LoadFEN(engine.FENStartPosition)
+	searchData.AddCurrPosToHistory()
 
 	for {
 		command, _ := reader.ReadString('\n')
