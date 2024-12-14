@@ -257,11 +257,11 @@ func scoreMoves(sd *SearchData, moves []Move, bestMoveFromPrevDepth Move) {
 }
 
 func convertToUCIScore(score int16) string {
-	score = utils.Abs(score)
-	if score >= LongestCheckmate && score % 2 == 0 {
+	scoreAbs := utils.Abs(score)
+	if scoreAbs >= LongestCheckmate && scoreAbs % 2 == 0 {
 		return fmt.Sprintf("mate %d", (InfinityCPValue - score) / 2)
 	}
-	if score >= LongestCheckmate && score % 2 == 1 {
+	if scoreAbs >= LongestCheckmate && scoreAbs % 2 == 1 {
 		return fmt.Sprintf("mate %d", (InfinityCPValue - score) / 2 + 1)
 	}
 	return fmt.Sprintf("%d", score)
