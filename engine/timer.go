@@ -16,6 +16,7 @@ type Timer struct {
 }
 
 func (timer *Timer) CalculateSearchTime(timeFormat int, movesToGo, timeLeft, timeInc int64) {
+	timer.Stopped = false
 	switch timeFormat {
 	case MovesToGoTimingFormat:
 		timer.searchTime = timeLeft / movesToGo + (timeInc / 2)
