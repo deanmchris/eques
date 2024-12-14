@@ -43,7 +43,7 @@ func isReadyCommandReponse() {
 }
 
 func UCINewGameCommandReponse(sd *engine.SearchData) {
-	*sd = engine.SearchData{}
+	sd.Reset()
 }
 
 func positionCommandReponse(sd *engine.SearchData, tokens *TokensQueue) {

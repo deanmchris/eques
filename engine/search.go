@@ -10,6 +10,7 @@ import (
 const (
 	MaxDepth               = 60
 	MaxPly                 = 80
+	MaxGameLength          = 500
 	NullMove          Move = 0
 	LongestCheckmate int16 = 9000
 	BestMoveScore   uint16 = 8000
@@ -70,6 +71,12 @@ type SearchData struct {
 	Pos         Position
 	prevPV      PVLine
 	totalNodes  uint64
+}
+
+func (sd *SearchData) Reset() {
+	sd.posStack = [MaxPly]Position{}
+	sd.pvLineStack = [MaxPly]PVLine{}
+	sd.Pos = Position{}
 }
 
 func Search(sd *SearchData) Move {
