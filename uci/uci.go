@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	EngineName = "1.0.0"
+	EngineName = "Bullet 1.0.0"
 	EngineAuthor = "Christian Dean"
 )
 
