@@ -144,8 +144,15 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 
 	sd.pvLineStack[ply].clear()
 
-	if ply > 0 && nodeIsDraw(sd) {
+	isRoot := ply == 0
+	inCheck := sd.Pos.IsSideInCheck(sd.Pos.Side)
+
+	if !isRoot && nodeIsDraw(sd) {
 		return DrawCPValue
+	}
+
+	if inCheck {
+		depth++
 	}
 
 	if depth == 0 {
@@ -187,7 +194,7 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 	}
 
 	if noLegalMovesFlag {
-		if sd.Pos.IsSideInCheck(sd.Pos.Side) {
+		if inCheck {
 			return -InfinityCPValue + int16(ply)
 		}
 		return DrawCPValue
