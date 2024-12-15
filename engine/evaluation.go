@@ -91,10 +91,6 @@ var FlipSq = [2][64]uint8{
 	},
 }
 
-func EvalPos(pos *Position) int16 {
-	return evaluatePosition(pos)
-}
-
 func evaluatePosition(pos *Position) int16 {
 	scores := []int16{0, 0}
 	evaluateSide(pos, White, scores)
