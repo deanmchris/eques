@@ -16,13 +16,14 @@ const (
 	BestMoveScore   uint16 = 8000
 )
 
-var MVV_LVA = [6][7]uint16{
-	{52, 54, 56, 58, 60, 0, 0}, // pawn attacker
-	{42, 44, 46, 48, 50, 0, 0}, // knight attacker
-	{32, 34, 36, 38, 40, 0, 0}, // bishop attacker
-	{22, 24, 26, 28, 30, 0, 0}, // rook attacker
-	{12, 14, 16, 18, 20, 0, 0}, // queen attacker
-	{2,   4,  6,  8, 10, 0, 0}, // king attacker
+var MVV_LVA [7][6]uint16 = [7][6]uint16{
+	{15, 14, 13, 12, 11, 10}, // victim is pawn
+	{25, 24, 23, 22, 21, 20}, // victim is knight
+	{35, 34, 33, 32, 31, 30}, // victim is bishop
+	{45, 44, 43, 42, 41, 40}, // victim is rook
+	{55, 54, 53, 52, 51, 50}, // victim is queen
+	{0,  0,  0,  0,  0,  0},  // victim is King
+	{0,  0,  0,  0,  0,  0},  // victim is no piece
 }
 
 type PVLine struct {
@@ -151,9 +152,9 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 		return DrawCPValue
 	}
 
-	if inCheck {
+	/*if inCheck {
 		depth++
-	}
+	}*/
 
 	if depth == 0 {
 		return qsearch(sd, alpha, beta, ply)
@@ -288,7 +289,7 @@ func scoreMoves(sd *SearchData, moves []Move, bestMoveFromPrevDepth Move) {
 		if move.Equal(bestMoveFromPrevDepth) {
 			move.SetScore(BestMoveScore)
 		} else {
-			mvv_lva_score := MVV_LVA[move.FromType()][sd.Pos.GetPieceTypeOnSq(move.ToSq())]
+			mvv_lva_score := MVV_LVA[sd.Pos.GetPieceTypeOnSq(move.ToSq())][move.FromType()]
 			move.SetScore(mvv_lva_score)
 		}
 	}
