@@ -6,3 +6,10 @@ func Abs[T int16](n T) T {
 	}
 	return n
 }
+
+func Min[T uint16](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
+}

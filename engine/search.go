@@ -27,39 +27,39 @@ var MVV_LVA [7][6]uint16 = [7][6]uint16{
 }
 
 type PVLine struct {
-	moves [MaxPly]Move
-	cnt   uint8
+	Moves [MaxPly]Move
+	Cnt   uint8
 }
 
 func (pv *PVLine) bestMove() Move {
-	return pv.moves[0]
+	return pv.Moves[0]
 }
 
 func (pv *PVLine) update(move Move, other *PVLine) {
-	pv.moves[0] = move
-	pv.cnt = 1
-	for i := uint8(0); i < other.cnt; i++ {
-		pv.moves[i+1] = other.moves[i]
-		pv.cnt++
+	pv.Moves[0] = move
+	pv.Cnt = 1
+	for i := uint8(0); i < other.Cnt; i++ {
+		pv.Moves[i+1] = other.Moves[i]
+		pv.Cnt++
 	}
 }
 
 func (pv *PVLine) clear() {
-	pv.cnt = 0
+	pv.Cnt = 0
 }
 
 func (pv *PVLine) copy(other *PVLine) {
-	pv.cnt = 0
-	for i := uint8(0); i < other.cnt; i++ {
-		pv.moves[i] = other.moves[i]
-		pv.cnt++
+	pv.Cnt = 0
+	for i := uint8(0); i < other.Cnt; i++ {
+		pv.Moves[i] = other.Moves[i]
+		pv.Cnt++
 	}
 }
 
 func (pv *PVLine) String() string {
 	sb := strings.Builder{}
-	for i := uint8(0); i < pv.cnt; i++ {
-		sb.WriteString(pv.moves[i].String())
+	for i := uint8(0); i < pv.Cnt; i++ {
+		sb.WriteString(pv.Moves[i].String())
 		sb.WriteString(" ")
 	}
 	return sb.String()
@@ -95,6 +95,10 @@ func (sd *SearchData) PopFromPosHistory() {
 
 func (sd *SearchData) ClearPosHistory() {
 	sd.historyIdx = 0
+}
+
+func (sd *SearchData) GetCurrPV() PVLine {
+	return sd.pvLineStack[0]
 }
 
 func Search(sd *SearchData) Move {
@@ -152,14 +156,14 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 	}
 
 	if depth == 0 {
-		return qsearch(sd, alpha, beta, ply)
+		return Qsearch(sd, alpha, beta, ply)
 	}
 
 	sd.totalNodes++
 	noLegalMovesFlag := true
 
 	moves := genMoves(&sd.Pos)
-	scoreMoves(sd, moves, sd.prevPV.moves[ply])
+	scoreMoves(sd, moves, sd.prevPV.Moves[ply])
 	moveOrderer := createMoveOrderer(moves)
 
 	for move := moveOrderer(); move != NullMove; move = moveOrderer() {
@@ -199,7 +203,7 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 	return alpha
 }
 
-func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
+func Qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 	if sd.totalNodes & 2047 == 0 {
 		sd.Timer.Update()
 	}
@@ -222,7 +226,7 @@ func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 	}
 
 	moves := genAttacksAndQueenPromos(&sd.Pos)
-	scoreMoves(sd, moves, sd.prevPV.moves[ply])
+	scoreMoves(sd, moves, sd.prevPV.Moves[ply])
 	moveOrderer := createMoveOrderer(moves)
 
 	for move := moveOrderer(); move != NullMove; move = moveOrderer() {
@@ -234,7 +238,7 @@ func qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 			continue
 		}
 
-		score := -qsearch(sd, -beta, -alpha, ply+1)
+		score := -Qsearch(sd, -beta, -alpha, ply+1)
 
 		if score >= beta {
 			return beta

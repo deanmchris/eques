@@ -138,23 +138,7 @@ func (pos Position) String() (boardStr string) {
 		for j := i; j < i+8; j++ {
 			pieceType := pos.GetPieceTypeOnSq(uint8(j))
 		    pieceColor := pos.GetPieceColorOnSq(uint8(j))
-			var pieceChar rune
-
-			switch pieceType {
-			case Pawn: pieceChar = 'p'
-			case Knight: pieceChar = 'n'
-			case Bishop: pieceChar = 'b'
-			case Rook: pieceChar = 'r'
-			case Queen: pieceChar = 'q'
-			case King: pieceChar = 'k'
-			case NoType: pieceChar = '.'
-			}
-
-			if pieceColor == White {
-				pieceChar = unicode.ToUpper(pieceChar)
-			}
-
-			boardStr += fmt.Sprintf("%c ", pieceChar)
+			boardStr += fmt.Sprintf("%c ", getPieceCharFromType(pieceType, pieceColor))
 		}
 		boardStr += "\n"
 	}
@@ -193,6 +177,73 @@ func (pos Position) String() (boardStr string) {
 	boardStr += fmt.Sprintf("\nhalf-move clock: %d", pos.HalfMove)
 	boardStr += fmt.Sprintf("\nzobrist hash: 0x%x\n", pos.Hash)
 	return boardStr
+}
+
+func (pos *Position) GenFEN() string {
+	positionStr := strings.Builder{}
+	for rankStartPos := 56; rankStartPos >= 0; rankStartPos -= 8 {
+		emptySquares := 0
+		for sq := rankStartPos; sq < rankStartPos+8; sq++ {
+			pieceType := pos.GetPieceTypeOnSq(uint8(sq))
+			pieceColor := pos.GetPieceColorOnSq(uint8(sq))
+
+			if pieceType == NoType {
+				emptySquares++
+			} else {
+				if emptySquares > 0 {
+					positionStr.WriteString(strconv.Itoa(emptySquares))
+					emptySquares = 0
+				}
+
+				positionStr.WriteRune(getPieceCharFromType(pieceType, pieceColor))
+			}
+		}
+		if emptySquares > 0 {
+			positionStr.WriteString(strconv.Itoa(emptySquares))
+			emptySquares = 0
+		}
+		positionStr.WriteString("/")
+	}
+
+	sideToMove := ""
+	castlingRights := ""
+	epSquare := ""
+
+	if pos.Side == White {
+		sideToMove = "w"
+	} else {
+		sideToMove = "b"
+	}
+
+	if pos.Castling&WhiteKingsideRight != 0 {
+		castlingRights += "K"
+	}
+	if pos.Castling&WhiteQueensideRight != 0 {
+		castlingRights += "Q"
+	}
+	if pos.Castling&BlackKingsideRight != 0 {
+		castlingRights += "k"
+	}
+	if pos.Castling&BlackQueensideRight != 0 {
+		castlingRights += "q"
+	}
+
+	if castlingRights == "" {
+		castlingRights = "-"
+	}
+
+	if pos.EPSq == NoSq {
+		epSquare = "-"
+	} else {
+		epSquare = SqToCoord(pos.EPSq)
+	}
+
+	return fmt.Sprintf(
+		"%s %s %s %s %d %d",
+		strings.TrimSuffix(positionStr.String(), "/"),
+		sideToMove, castlingRights, epSquare,
+		pos.HalfMove, 0,
+	)
 }
 
 func (pos *Position) IsSideInCheck(side uint8) bool {
@@ -342,4 +393,23 @@ func (pos *Position) GetPieceColorOnSq(sq uint8) uint8 {
 		return Black
 	} 
 	return NoColor
+}
+
+func getPieceCharFromType(pieceType, pieceColor uint8) rune {
+	var pieceChar rune
+	switch pieceType {
+	case Pawn: pieceChar = 'p'
+	case Knight: pieceChar = 'n'
+	case Bishop: pieceChar = 'b'
+	case Rook: pieceChar = 'r'
+	case Queen: pieceChar = 'q'
+	case King: pieceChar = 'k'
+	case NoType: pieceChar = '.'
+	}
+
+	if pieceColor == White {
+		pieceChar = unicode.ToUpper(pieceChar)
+	}
+
+	return pieceChar
 }
