@@ -101,15 +101,14 @@ func (parser *PGNParser) LoadPGNFile(path string) {
 }
 
 func (parser *PGNParser) NextGame() *Game {
-	if !parser.scanner.Scan() {
-		return nil
-	}
-
 	game := Game{StartFen: engine.FENStartPosition, Result: NoResult}
 	pgnMoves := strings.Builder{}
+	done := true
 
     for parser.scanner.Scan() {
 		line := parser.scanner.Text()
+		done = false
+
 		if parser.eventTagRegex.MatchString(line) {
 			break
 		}
@@ -162,6 +161,10 @@ func (parser *PGNParser) NextGame() *Game {
 		move := parseSANToMove(&parser.pos, &parser.posCopy, match[0], subexpIndex)
 		parser.pos.DoMove(move)
 		game.Moves = append(game.Moves, move)
+	}
+
+	if done {
+		return nil
 	}
 
 	return &game
