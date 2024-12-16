@@ -137,7 +137,7 @@ func (pos Position) String() (boardStr string) {
 		boardStr += fmt.Sprintf("%d | ", i/8+1)
 		for j := i; j < i+8; j++ {
 			pieceType := pos.GetPieceTypeOnSq(uint8(j))
-		    pieceColor := pos.getPieceColorOnSq(uint8(j))
+		    pieceColor := pos.GetPieceColorOnSq(uint8(j))
 			var pieceChar rune
 
 			switch pieceType {
@@ -334,7 +334,7 @@ func (pos *Position) GetPieceTypeOnSq(sq uint8) uint8 {
 	return NoType
 }
 
-func (pos *Position) getPieceColorOnSq(sq uint8) uint8 {
+func (pos *Position) GetPieceColorOnSq(sq uint8) uint8 {
 	sqBB := uint64(1) << sq
 	if pos.Colors[White] & sqBB != 0 {
 		return White

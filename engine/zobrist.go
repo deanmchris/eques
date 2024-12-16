@@ -41,7 +41,7 @@ func InitZobristValues() {
 func GenHash(pos *Position) (hash uint64) {
 	for sq := uint8(0); sq < 64; sq++ {
 		pieceType := pos.GetPieceTypeOnSq(sq)
-		pieceColor := pos.getPieceColorOnSq(sq)
+		pieceColor := pos.GetPieceColorOnSq(sq)
 
 		if pieceType == NoType {
 			continue
