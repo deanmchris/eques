@@ -10,7 +10,7 @@ import (
 const (
 	MaxDepth               = 60
 	MaxPly                 = 80
-	MaxGameLength          = 500
+	MaxGameLength          = 1024
 	NullMove          Move = 0
 	LongestCheckmate int16 = 9000
 	BestMoveScore   uint16 = 8000
