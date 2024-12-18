@@ -144,9 +144,9 @@ func parseUCIMove(sd *engine.SearchData, move string) engine.Move {
 		moveType = engine.BlackCastleK
 	} else if move == "e8c8" && pieceType == engine.King {
 		moveType = engine.BlackCastleQ
-	} else if toSq == sd.Pos.EPSq && sd.Pos.Side == engine.White {
+	} else if pieceType == engine.Pawn && toSq == sd.Pos.EPSq && sd.Pos.Side == engine.White {
 		moveType = engine.WhiteAttackEP
-	} else if toSq == sd.Pos.EPSq && sd.Pos.Side == engine.Black {
+	} else if pieceType == engine.Pawn && toSq == sd.Pos.EPSq && sd.Pos.Side == engine.Black {
 		moveType = engine.BlackAttackEP
 	} else if attackedType != engine.NoType {
 		moveType = engine.Attack
