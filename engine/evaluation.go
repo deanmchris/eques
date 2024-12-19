@@ -92,17 +92,5 @@ var FlipSq = [2][64]uint8{
 }
 
 func evaluatePosition(pos *Position) int16 {
-	scores := []int16{0, 0}
-	evaluateSide(pos, White, scores)
-	evaluateSide(pos, Black, scores)
-	return scores[pos.Side] - scores[pos.Side^1]
-}
-
-func evaluateSide(pos *Position, side uint8, scores []int16) {
-	piecesBB := pos.Colors[side]
-	for piecesBB != 0 {
-		sq := GetLSBpos(piecesBB)
-		scores[side] += PieceSquareTable[pos.GetPieceTypeOnSq(sq)][FlipSq[side][sq]]
-		piecesBB &= (piecesBB - 1)
-	}
+	return pos.Scores[pos.Side] - pos.Scores[pos.Side^1]
 }
