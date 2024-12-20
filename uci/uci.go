@@ -14,6 +14,16 @@ const (
 	EngineAuthor = "Christian Dean"
 )
 
+type GameData struct {
+	numOfMoves    uint16
+	initValuesSet bool
+}
+
+func (g *GameData) Reset() {
+	g.numOfMoves = 0
+	g.initValuesSet = false
+}
+
 type TokensQueue struct {
 	tokens []string
 }
@@ -42,11 +52,12 @@ func isReadyCommandReponse() {
 	fmt.Println("readyok")
 }
 
-func UCINewGameCommandReponse(sd *engine.SearchData) {
+func UCINewGameCommandReponse(sd *engine.SearchData, g *GameData) {
 	sd.Reset()
+	g.Reset()
 }
 
-func positionCommandReponse(sd *engine.SearchData, tokens *TokensQueue) {
+func positionCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQueue) {
 	token := tokens.Pop()
 	if token == "fen" {
 		fenStringBuilder := strings.Builder{}
@@ -62,6 +73,7 @@ func positionCommandReponse(sd *engine.SearchData, tokens *TokensQueue) {
 
 	sd.ClearPosHistory()
 	sd.AddCurrPosToHistory()
+	g.numOfMoves = 0
 
 	if tokens.Size() > 0 && tokens.Pop() == "moves" {
 		for tokens.Size() > 0 {
@@ -69,11 +81,14 @@ func positionCommandReponse(sd *engine.SearchData, tokens *TokensQueue) {
 			move := parseUCIMove(sd, moveToken)
 			sd.Pos.DoMove(move)
 			sd.AddCurrPosToHistory()
+			g.numOfMoves++
 		}
 	}
+	
+	g.numOfMoves /= 2
 }
 
-func goCommandReponse(sd *engine.SearchData, tokens *TokensQueue) {
+func goCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQueue) {
 	prefix := "b"
 	if sd.Pos.Side == engine.White {
 		prefix = "w"
@@ -102,7 +117,12 @@ func goCommandReponse(sd *engine.SearchData, tokens *TokensQueue) {
 		}
 	}
 
-	sd.Timer.CalculateSearchTime(timeFormat, movesToGo, timeLeft, timeInc)
+	if !g.initValuesSet {
+		sd.Timer.SetInitValues(timeFormat, movesToGo)
+		g.initValuesSet = true
+	}
+
+	sd.Timer.CalculateSearchTime(timeFormat, timeLeft, timeInc, g.numOfMoves)
 	bestMove := engine.Search(sd)
 	fmt.Printf("bestmove %v\n", bestMove)
 }
@@ -182,6 +202,7 @@ func sanatizeString(input,  removedChars string) string {
 func StartUCIProtocolInterface() {
 	reader := bufio.NewReader(os.Stdin)
 	searchData := engine.SearchData{}
+	gameData := GameData{}
 
 	UCICommandReponse()
 	searchData.Pos.LoadFEN(engine.FENStartPosition)
@@ -198,11 +219,11 @@ func StartUCIProtocolInterface() {
 		case "isready":
 			isReadyCommandReponse()
 		case "ucinewgame":
-			UCINewGameCommandReponse(&searchData)
+			UCINewGameCommandReponse(&searchData, &gameData)
 		case "position":
-			positionCommandReponse(&searchData, &tokens)
+			positionCommandReponse(&searchData, &gameData, &tokens)
 		case "go":
-			go goCommandReponse(&searchData, &tokens)
+			go goCommandReponse(&searchData, &gameData, &tokens)
 		case "stop":
 			stopCommandReponse(&searchData)
 		case "quit":

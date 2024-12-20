@@ -147,14 +147,23 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 		return 0
 	}
 
+	if ply >= MaxPly {
+		return evaluatePosition(&sd.Pos)
+	}
+
 	sd.pvLineStack[ply].clear()
 
 	isRoot := ply == 0
+	inCheck := sd.Pos.IsSideInCheck(sd.Pos.Side)
 
 	if !isRoot && nodeIsDraw(sd) {
 		return DrawCPValue
 	}
 
+	if depth <= 2 && inCheck {
+		depth++
+	}
+ 
 	if depth == 0 {
 		return Qsearch(sd, alpha, beta, ply)
 	}
@@ -194,7 +203,7 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 	}
 
 	if noLegalMovesFlag {
-		if sd.Pos.IsSideInCheck(sd.Pos.Side) {
+		if inCheck {
 			return -InfinityCPValue + int16(ply)
 		}
 		return DrawCPValue
@@ -210,6 +219,10 @@ func Qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 
 	if sd.Timer.Stopped {
 		return 0
+	}
+
+	if ply >= MaxPly {
+		return evaluatePosition(&sd.Pos)
 	}
 
 	sd.totalNodes++

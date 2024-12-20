@@ -45,6 +45,7 @@ type Position struct {
 	Pieces   [6]uint64
 	Colors   [2]uint64
 	Hash     uint64
+	Scores   [2]int16
 	Side,
 	Castling,
 	EPSq,
@@ -61,6 +62,7 @@ func CopyPos(oldPos, newPos *Position) {
 	newPos.Pieces = oldPos.Pieces
 	newPos.Colors = oldPos.Colors
 	newPos.Hash = oldPos.Hash
+	newPos.Scores = oldPos.Scores
 	newPos.Side = oldPos.Side
 	newPos.Castling = oldPos.Castling
 	newPos.EPSq = oldPos.EPSq
@@ -70,6 +72,7 @@ func CopyPos(oldPos, newPos *Position) {
 func (pos *Position) LoadFEN(fen string) {
 	pos.Pieces = [6]uint64{}
 	pos.Colors = [2]uint64{}
+	pos.Scores = [2]int16{}
 
 	fields := strings.Fields(fen)
 	pieces := fields[0]
@@ -359,12 +362,14 @@ func (pos *Position) putPiece(pieceType, pieceColor, sq uint8) {
 	pos.Pieces[pieceType] = SetBit(pos.Pieces[pieceType], sq)
 	pos.Colors[pieceColor] = SetBit(pos.Colors[pieceColor], sq)
 	pos.Hash ^= PieceZobristValues[pieceColor][pieceType][sq]
+	pos.Scores[pieceColor] += PieceSquareTable[pieceType][FlipSq[pieceColor][sq]]
 }
 
 func (pos *Position) removePiece(pieceType, pieceColor, sq uint8) {
 	pos.Pieces[pieceType] = UnsetBit(pos.Pieces[pieceType], sq)
 	pos.Colors[pieceColor] = UnsetBit(pos.Colors[pieceColor], sq)
 	pos.Hash ^= PieceZobristValues[pieceColor][pieceType][sq]
+	pos.Scores[pieceColor] -= PieceSquareTable[pieceType][FlipSq[pieceColor][sq]]
 }
 
 func (pos *Position) GetPieceTypeOnSq(sq uint8) uint8 {
