@@ -84,6 +84,8 @@ func positionCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQu
 			g.numOfMoves++
 		}
 	}
+	
+	g.numOfMoves /= 2
 }
 
 func goCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQueue) {
