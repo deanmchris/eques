@@ -19,9 +19,9 @@ type GameData struct {
 	initValuesSet bool
 }
 
-func (g *GameData) Reset() {
-	g.numOfMoves = 0
-	g.initValuesSet = false
+func (gd *GameData) Reset() {
+	gd.numOfMoves = 0
+	gd.initValuesSet = false
 }
 
 type TokensQueue struct {
@@ -52,12 +52,12 @@ func isReadyCommandReponse() {
 	fmt.Println("readyok")
 }
 
-func UCINewGameCommandReponse(sd *engine.SearchData, g *GameData) {
+func UCINewGameCommandReponse(sd *engine.SearchData, gd *GameData) {
 	sd.Reset()
-	g.Reset()
+	gd.Reset()
 }
 
-func positionCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQueue) {
+func positionCommandReponse(sd *engine.SearchData, gd *GameData, tokens *TokensQueue) {
 	token := tokens.Pop()
 	if token == "fen" {
 		fenStringBuilder := strings.Builder{}
@@ -73,7 +73,7 @@ func positionCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQu
 
 	sd.ClearPosHistory()
 	sd.AddCurrPosToHistory()
-	g.numOfMoves = 0
+	gd.numOfMoves = 0
 
 	if tokens.Size() > 0 && tokens.Pop() == "moves" {
 		for tokens.Size() > 0 {
@@ -81,14 +81,14 @@ func positionCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQu
 			move := parseUCIMove(sd, moveToken)
 			sd.Pos.DoMove(move)
 			sd.AddCurrPosToHistory()
-			g.numOfMoves++
+			gd.numOfMoves++
 		}
 	}
 	
-	g.numOfMoves /= 2
+	gd.numOfMoves /= 2
 }
 
-func goCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQueue) {
+func goCommandReponse(sd *engine.SearchData, gd *GameData, tokens *TokensQueue) {
 	prefix := "b"
 	if sd.Pos.Side == engine.White {
 		prefix = "w"
@@ -117,12 +117,12 @@ func goCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQueue) {
 		}
 	}
 
-	if !g.initValuesSet {
+	if !gd.initValuesSet {
 		sd.Timer.SetInitValues(timeFormat, movesToGo)
-		g.initValuesSet = true
+		gd.initValuesSet = true
 	}
 
-	sd.Timer.CalculateSearchTime(timeFormat, movesToGo, timeLeft, timeInc, g.numOfMoves)
+	sd.Timer.CalculateSearchTime(timeFormat, movesToGo, timeLeft, timeInc, gd.numOfMoves)
 	bestMove := engine.Search(sd)
 	fmt.Printf("bestmove %v\n", bestMove)
 }
