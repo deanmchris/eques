@@ -122,7 +122,7 @@ func goCommandReponse(sd *engine.SearchData, g *GameData, tokens *TokensQueue) {
 		g.initValuesSet = true
 	}
 
-	sd.Timer.CalculateSearchTime(timeFormat, timeLeft, timeInc, g.numOfMoves)
+	sd.Timer.CalculateSearchTime(timeFormat, movesToGo, timeLeft, timeInc, g.numOfMoves)
 	bestMove := engine.Search(sd)
 	fmt.Printf("bestmove %v\n", bestMove)
 }

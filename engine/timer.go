@@ -24,22 +24,23 @@ type Timer struct {
 }
 
 func (timer *Timer) SetInitValues(timeFormat int, movesToGo int64) {
-	if timeFormat != MovesToGoTimingFormat {
-		movesToGo = AvgExpectedNumMoves
+	if timeFormat == MovesToGoTimingFormat {
+		timer.movesToGo = AvgExpectedNumMoves
+		timer.movesToGoHalved = movesToGo / 2
+		timer.coeff = (timer.movesToGoHalved * timer.movesToGoHalved) / 50
 	}
-	timer.movesToGo = movesToGo
-	timer.movesToGoHalved = movesToGo / 2
-	timer.coeff = (timer.movesToGoHalved * timer.movesToGoHalved) / 50
 }
 
-func (timer *Timer) CalculateSearchTime(timeFormat int, timeLeft, timeInc int64, numOfMoves uint16) {
+func (timer *Timer) CalculateSearchTime(timeFormat int, movesToGo, timeLeft, timeInc int64, numOfMoves uint16) {
 	timer.Stopped = false
 	bonus := timeInc / 2
-	divide := timer.CalcTimeLeftDivide(numOfMoves)
 
 	switch timeFormat {
-	case MovesToGoTimingFormat, SuddenDeathTimeFormat:
-		timer.searchTime = timeLeft / divide + bonus
+	case MovesToGoTimingFormat:
+		timer.searchTime = timeLeft / movesToGo + bonus
+		timer.infiniteTime = false
+	case SuddenDeathTimeFormat:
+		timer.searchTime = timeLeft / timer.CalcTimeLeftDivide(numOfMoves) + bonus
 		timer.infiniteTime = false
 	case InfiniteTimeFormat:
 		timer.infiniteTime = true
