@@ -56,6 +56,15 @@ func (weights *Weights) LoadWeights(PSQT [6][64]int16) {
 	}
 }
 
+func (weights *Weights) CopyWeightsToPSQT(PSQT *[6][64]int16) {
+	for pieceType := engine.Pawn; pieceType < engine.NoType; pieceType++ {
+		startIdx := pieceType*64
+		for sq := 0; sq < 64; sq++ {
+			PSQT[pieceType][sq] = int16(weights.PSQTWeights[startIdx+sq])
+		}
+	}
+}
+
 type Piece struct {
 	WeightIdx uint16
 }
