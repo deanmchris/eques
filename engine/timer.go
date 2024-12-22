@@ -23,12 +23,10 @@ type Timer struct {
 	infiniteTime    bool
 }
 
-func (timer *Timer) SetInitValues(timeFormat int, movesToGo int64) {
-	if timeFormat == MovesToGoTimingFormat {
-		timer.movesToGo = AvgExpectedNumMoves
-		timer.movesToGoHalved = movesToGo / 2
-		timer.coeff = (timer.movesToGoHalved * timer.movesToGoHalved) / 50
-	}
+func (timer *Timer) Init() {
+	timer.movesToGo = AvgExpectedNumMoves
+	timer.movesToGoHalved = timer.movesToGo / 2
+	timer.coeff = (timer.movesToGoHalved * timer.movesToGoHalved) / 50
 }
 
 func (timer *Timer) CalculateSearchTime(timeFormat int, movesToGo, timeLeft, timeInc int64, numOfMoves uint16) {

@@ -16,12 +16,10 @@ const (
 
 type GameData struct {
 	numOfMoves    uint16
-	initValuesSet bool
 }
 
 func (gd *GameData) Reset() {
 	gd.numOfMoves = 0
-	gd.initValuesSet = false
 }
 
 type TokensQueue struct {
@@ -55,6 +53,7 @@ func isReadyCommandReponse() {
 func UCINewGameCommandReponse(sd *engine.SearchData, gd *GameData) {
 	sd.Reset()
 	gd.Reset()
+	sd.Timer.Init()
 }
 
 func positionCommandReponse(sd *engine.SearchData, gd *GameData, tokens *TokensQueue) {
@@ -115,11 +114,6 @@ func goCommandReponse(sd *engine.SearchData, gd *GameData, tokens *TokensQueue) 
 		case "infinite":
 			timeFormat = engine.InfiniteTimeFormat
 		}
-	}
-
-	if !gd.initValuesSet {
-		sd.Timer.SetInitValues(timeFormat, movesToGo)
-		gd.initValuesSet = true
 	}
 
 	sd.Timer.CalculateSearchTime(timeFormat, movesToGo, timeLeft, timeInc, gd.numOfMoves)
@@ -207,6 +201,7 @@ func StartUCIProtocolInterface() {
 	UCICommandReponse()
 	searchData.Pos.LoadFEN(engine.FENStartPosition)
 	searchData.AddCurrPosToHistory()
+	searchData.Timer.Init()
 
 	for {
 		command, _ := reader.ReadString('\n')
