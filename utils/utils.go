@@ -1,6 +1,6 @@
 package utils
 
-func Abs[T int16](n T) T {
+func Abs[T int16 | float64](n T) T {
 	if n <= 0 {
 		return -n
 	}
