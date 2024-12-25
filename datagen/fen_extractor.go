@@ -166,17 +166,6 @@ func ExtractFENs(pgnFilePath, outFilePath string, sampleSizePerGame uint16, scor
 	log.Printf("%d total games scanned\n", numGames)
 }
 
-func getBaseMaterialCount(pos *engine.Position) (score uint16) {
-	allBB := pos.Colors[engine.White] | pos.Colors[engine.Black]
-	for allBB != 0 {
-		sq := engine.GetLSBpos(allBB)
-		pieceType := pos.GetPieceTypeOnSq(sq)
-		score += BaseMaterialCP[pieceType]
-		allBB &= (allBB - 1)
-	}
-	return score
-}
-
 func applyPVToGetFEN(sd *engine.SearchData, posCopy *engine.Position) string {
 	pvLine := sd.GetCurrPV()
 	engine.CopyPos(&sd.Pos, posCopy)
