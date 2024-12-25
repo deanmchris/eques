@@ -72,7 +72,7 @@ func ExtractFENs(pgnFilePath, outFilePath string, sampleSizePerGame uint16, scor
 	sd := engine.SearchData{}
 	posCopy := engine.Position{}
 
-	sd.Timer.CalculateSearchTime(engine.InfiniteTimeFormat, 0, 0, 0)
+	sd.Timer.CalculateSearchTime(engine.InfiniteTimeFormat, 0, 0, 0, 0)
 	log.Printf("Extracting FENs from %s", pgnFilePath)
 
 	numGames := 0
@@ -110,10 +110,6 @@ func ExtractFENs(pgnFilePath, outFilePath string, sampleSizePerGame uint16, scor
 				continue
 			}
 
-			if getBaseMaterialCount(&sd.Pos) > (MaxMaterialCount/2) {
-				continue
-			}
-
 			score := engine.Qsearch(&sd, -engine.InfinityCPValue, engine.InfinityCPValue, 0)
 
 			if utils.Abs(score) > scoreBoundCP {
@@ -133,15 +129,19 @@ func ExtractFENs(pgnFilePath, outFilePath string, sampleSizePerGame uint16, scor
 		}
 	}
 
+	log.Printf("%d fens extracted", len(fens))
 	log.Println("Checking for duplicate FENs and shuffling")
 
 	uniqueFENs := []string{}
 	seen := make(map[string]bool)
+	duplicates := 0
 
 	for _, fen := range fens {
 		if seenBefore := seen[fen]; !seenBefore {
 			seen[fen] = true
 			uniqueFENs = append(uniqueFENs, fen)
+		} else {
+			duplicates++
 		}
 	}
 
@@ -151,6 +151,7 @@ func ExtractFENs(pgnFilePath, outFilePath string, sampleSizePerGame uint16, scor
 	)
 
 
+	log.Printf("%d duplicates ignored", duplicates)
 	log.Printf("Writing %d FENs to %s", len(uniqueFENs), outFilePath)
 
 	for _, fen := range uniqueFENs {
