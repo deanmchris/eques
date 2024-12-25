@@ -148,7 +148,7 @@ func negamax(sd *SearchData, alpha, beta int16, depth, ply uint8) int16 {
 	}
 
 	if ply >= MaxPly {
-		return evaluatePosition(&sd.Pos)
+		return EvaluatePosition(&sd.Pos)
 	}
 
 	sd.pvLineStack[ply].clear()
@@ -222,13 +222,13 @@ func Qsearch(sd *SearchData, alpha, beta int16, ply uint8) int16 {
 	}
 
 	if ply >= MaxPly {
-		return evaluatePosition(&sd.Pos)
+		return EvaluatePosition(&sd.Pos)
 	}
 
 	sd.totalNodes++
 
 	sd.pvLineStack[ply].clear()
-	eval := evaluatePosition(&sd.Pos)
+	eval := EvaluatePosition(&sd.Pos)
 
 	if eval >= beta {
 		return beta
