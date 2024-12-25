@@ -69,7 +69,7 @@ func prettyPrintPSQT(name string, psqt []int16) {
 		if sq > 0 && sq%8 == 0 {
 			fmt.Print("\n    ")
 		}
-		fmt.Print(psqt[sq], ", ")
+		fmt.Printf("%3d, ", psqt[sq])
 	}
 	fmt.Print("\n},\n")
 }
