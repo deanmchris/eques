@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const (
@@ -204,7 +205,8 @@ func (weights *Weights) ComputeMSE(w *Weights, d []Datapoint) (sum float64) {
 	return sum / float64(len(d))
 }
 
-func (weights *Weights) computeAndApplyGradient(learningRate float64, datapoints []Datapoint) {
+func (weights *Weights) computePartialGradient(datapoints []Datapoint, partials chan []float64, wg *sync.WaitGroup) {
+	defer wg.Done()
 	gradients := make([]float64, len(weights.weights))
 
 	for i := 0; i < len(datapoints); i++ {
@@ -214,6 +216,41 @@ func (weights *Weights) computeAndApplyGradient(learningRate float64, datapoints
 
 		for _, piece := range datapoint.Pieces {
 			gradients[piece.WeightIdx] += term * float64(piece.Sign)
+		}
+	}
+
+	partials <- gradients
+}
+
+func (weights *Weights) computeAndApplyGradient(learningRate float64, numThreads int, datapoints []Datapoint) {
+	var wg sync.WaitGroup
+	partials := make(chan []float64, numThreads)
+
+	numDatapointsPerThread := len(datapoints) / numThreads
+	for i := 0; i < numThreads; i++ {
+		wg.Add(1)
+		start := numDatapointsPerThread*i
+		end := numDatapointsPerThread*(i+1)
+
+		if i == numThreads-1 {
+			end = len(datapoints)
+		}
+
+		go weights.computePartialGradient(
+			datapoints[start:end], 
+			partials, 
+			&wg,
+		)
+	}
+
+	wg.Wait()
+
+	gradients := make([]float64, len(weights.weights))
+
+	for i := 0; i < numThreads; i++ {
+		partial := <-partials
+		for j := 0; j < len(gradients); j++ {
+			gradients[j] += partial[j]
 		}
 	}
 
@@ -237,7 +274,7 @@ func (weights *Weights) DisplayWeights() {
 	prettyPrintPSQT("King PST", convertFloatSiceToInt(weights.weights[320:384]))
 }
 
-func (weights *Weights) TuneWeights(dataFile string, learningRate float64, iterations, recordErrEveryNth int) {
+func (weights *Weights) TuneWeights(dataFile string, learningRate float64, iterations, numThreads, recordErrEveryNth int) {
 	datapoints := loadDatapoints(dataFile)
 	weights.sumOfGradientsSquared = [NumPSQTWeights]float64{}
 
@@ -245,7 +282,7 @@ func (weights *Weights) TuneWeights(dataFile string, learningRate float64, itera
 	errors := []float64{beforeErr}
 
 	for i := 0; i < iterations; i++ {
-		weights.computeAndApplyGradient(learningRate, datapoints)
+		weights.computeAndApplyGradient(learningRate, numThreads, datapoints)
 		fmt.Printf("Completed iteration %d/%d\n", i+1, iterations)
 		
 		if i > 0 && i % recordErrEveryNth == 0 {

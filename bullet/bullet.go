@@ -17,8 +17,9 @@ const (
 	DefaultLearningRate float64 = 0.8
 	DefaultIterations   int     = 2000
 	DefaultRecordRate   int     = 40
-	DefaultDepth        uint     = 1
+	DefaultDepth        uint    = 1
 	DefaultTTSize       uint64  = 16
+	DefaultNumThreads   int     = 1
 )
 
 func init() {
@@ -47,6 +48,12 @@ func processTuneCommand() {
 		"The number of iterations to perform gradient descent.",
 	)
 
+	tuneNumThreads := tuneCmd.Int(
+		"num_threads",
+		DefaultNumThreads,
+		"The number of \"threads\" (go-routines) to spawn to paralleize the tuning process.",
+	)
+
 	tuneRecordErrEveryNth := tuneCmd.Int(
 		"record_err_every_nth",
 		DefaultRecordRate,
@@ -64,7 +71,7 @@ func processTuneCommand() {
 
 	weights := tuner.Weights{}
 	weights.LoadBaseWeights()
-	weights.TuneWeights(*tuneDataFile, *tuneLearningRate, *tuneIterations, *tuneRecordErrEveryNth)
+	weights.TuneWeights(*tuneDataFile, *tuneLearningRate, *tuneIterations, *tuneNumThreads, *tuneRecordErrEveryNth)
 }
 
 func processPerftCommand() {
