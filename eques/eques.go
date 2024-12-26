@@ -1,6 +1,7 @@
 package main
 
 import (
+	"eques/datagen"
 	"eques/engine"
 	"eques/uci"
 	"eques/tuner"
@@ -20,6 +21,9 @@ const (
 	DefaultDepth        uint    = 1
 	DefaultTTSize       uint64  = 16
 	DefaultNumThreads   int     = 1
+	DefaultOutfile      string  = "fens.csv"
+	DefaultSampleSize   uint    = 20
+	DefaultScoreBound   uint    = 50
 )
 
 func init() {
@@ -72,6 +76,50 @@ func processTuneCommand() {
 	weights := tuner.Weights{}
 	weights.LoadBaseWeights()
 	weights.TuneWeights(*tuneDataFile, *tuneLearningRate, *tuneIterations, *tuneNumThreads, *tuneRecordErrEveryNth)
+}
+
+func processFenExtractCommand() {
+	extractCmd := flag.NewFlagSet("extract", flag.ExitOnError)
+
+	extractPGNFilePath := extractCmd.String(
+		"pgnfile",
+		"",
+		"The PGN file to extract FENs from.",
+	)
+
+	extractOutfilePath := extractCmd.String(
+		"outfile",
+		DefaultOutfile,
+		"The file to store the output FENs in.",
+
+	)
+
+	extractSampleSize := extractCmd.Uint(
+		"sample_size",
+		DefaultSampleSize,
+		"The number of fens to sample at most from each game.",
+	)
+
+	extractScoreBound := extractCmd.Uint(
+		"score_bound",
+		DefaultScoreBound,
+		"Each position with a quiescence search score not within [-<score_bound>, <score_bound>]\n" + 
+		"centi-pawns will be excluded.",
+	)
+
+	extractCmd.Parse(os.Args[2:])
+
+	if *extractPGNFilePath== "" {
+		fmt.Println("Please supply a data file to the FEN extractor.")
+		return
+	}
+
+	datagen.ExtractFENs(
+		*extractPGNFilePath,
+		*extractOutfilePath,
+		uint16(*extractSampleSize),
+		int16(*extractScoreBound),
+	)
 }
 
 func processPerftCommand() {
@@ -145,15 +193,19 @@ func main() {
 		processTuneCommand()
 	case "perft":
 		processPerftCommand()
+	case "extract":
+		processFenExtractCommand()
 	case "uci":
 		uci.StartUCIProtocolInterface()	
 	case "-h", "h", "--help", "help":
 		fmt.Println("The following commands are available:")
 		fmt.Print(
 			"    * tune: Run the tuner. Run the program with the flags \"tune -h\"\n" +
-			"      for more details.\n",
-			"    * tune: Run perft. Run the program with the flags \"perft -h\"\n" +
-			"      for more details.\n",
+			"      for more details.\n" + 
+			"    * perft: Run perft. Run the program with the flags \"perft -h\"\n" +
+			"      for more details.\n" +
+			"    * extract: Extract FENs, from a given PGN file, for running the tuner. Run\n" +
+			"      \"extract -h\" for more details\n" +
 			"    * uci: Start the UCI protocol. Program will default to this command if\n" +
 			"      no command is given.\n",
 		)
