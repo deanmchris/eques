@@ -2,7 +2,7 @@ package datagen
 
 import (
 	"bufio"
-	"bullet/engine"
+	"eques/engine"
 	"fmt"
 	"os"
 	"regexp"

@@ -1,3 +1,3 @@
-module bullet
+module eques
 
 go 1.22.0

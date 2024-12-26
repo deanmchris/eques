@@ -2,7 +2,7 @@ package tuner
 
 import (
 	"bufio"
-	"bullet/engine"
+	"eques/engine"
 	"fmt"
 	"math"
 	"math/rand"

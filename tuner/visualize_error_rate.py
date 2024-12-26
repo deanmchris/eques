@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 
-error_file_path = os.path.join(os.path.dirname(os.getcwd()), 'bullet', 'errors.txt')
+error_file_path = os.path.join(os.path.dirname(os.getcwd()), 'eques', 'errors.txt')
 error_rates = []
 
 with open(error_file_path, 'r') as infile:

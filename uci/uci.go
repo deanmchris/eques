@@ -2,7 +2,7 @@ package uci
 
 import (
 	"bufio"
-	"bullet/engine"
+	"eques/engine"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	EngineName = "Bullet 1.0.0"
+	EngineName = "Eques 1.0.0"
 	EngineAuthor = "Christian Dean"
 )
 

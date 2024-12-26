@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bullet/engine"
-	"bullet/uci"
-	"bullet/tuner"
+	"eques/engine"
+	"eques/uci"
+	"eques/tuner"
 	"flag"
 	"fmt"
 	"os"

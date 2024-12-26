@@ -2,8 +2,8 @@ package datagen
 
 import (
 	"bufio"
-	"bullet/engine"
-	"bullet/utils"
+	"eques/engine"
+	"eques/utils"
 	"fmt"
 	"log"
 	"math/rand"

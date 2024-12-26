@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"bullet/prng"
+	"eques/prng"
 	"math/bits"
 )
 

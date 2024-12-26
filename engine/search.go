@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"bullet/utils"
+	"eques/utils"
 	"fmt"
 	"strings"
 	"time"
